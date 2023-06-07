@@ -246,7 +246,6 @@ if __name__ == "__main__":
     listaOpcoes = []
     
     for i in range(26):
-    
         listaOpcoes.append(alfabeto(listaAlfabeto[i],fonteAlfabeto,listaRetangulos[i],5,larguraFonteAlfabeto,alturaFonteAlfabeto))
 
     jogador = usuario(370,400,5)

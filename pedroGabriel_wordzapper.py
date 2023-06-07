@@ -1,5 +1,55 @@
 import pygame
 import sys
+import string
+import random
+
+class usuario:
+    def __init__(self,posicao_inicial_x,posicao_inicial_y,velocidade):
+        espaconave = pygame.image.load('img/navePrincipal.png')
+        self.nave = pygame.transform.scale(espaconave, (100,100))
+        self.rect = pygame.Rect(posicao_inicial_x, posicao_inicial_y, self.nave.get_width(), self.nave.get_height())
+        self.rect.topleft = posicao_inicial_x,posicao_inicial_y
+        self.velocidade = velocidade
+
+        self.tiro_disparado = False
+
+    def move(self):
+        window.blit(self.nave,self.rect)
+
+        if pygame.key.get_pressed()[pygame.K_LEFT]:
+            self.rect.x -= self.velocidade
+            if self.rect.x < -5:
+                self.rect.x += self.velocidade
+
+        if pygame.key.get_pressed()[pygame.K_RIGHT]:
+            self.rect.x += self.velocidade
+            if self.rect.x >= 760:
+                self.rect.x -= self.velocidade
+
+        if pygame.key.get_pressed()[pygame.K_DOWN]:
+            self.rect.y += self.velocidade
+            if self.rect.y >= 425:
+                self.rect.y -= self.velocidade
+
+        if pygame.key.get_pressed()[pygame.K_UP]:
+            self.rect.y -= self.velocidade
+            if self.rect.y < 150:
+                self.rect.y += self.velocidade
+
+    def volta_comeco(self):
+        self.rect.x = 380
+        self.rect.y = 400
+    
+    def tiro(self):
+        if pygame.key.get_pressed()[pygame.K_SPACE] and not self.tiro_disparado:
+            tiro = disparo(self.rect.center[0],self.rect.top)
+            grupoTiros.add(tiro)
+
+            self.tiro_disparado = True
+        elif not pygame.key.get_pressed()[pygame.K_SPACE]:
+            self.tiro_disparado = False
+
+ 
 class botao():
     def __init__(self,texto,x,y,largura,altura,funcao):
         # Atributos padrões para verificações por motivos de performace
@@ -47,6 +97,100 @@ class botao():
         else:
             self.corBotao = (200,100,100)
 
+class alfabeto():
+    def __init__(self,letra, fonteLetra, Retangulo, velocidade, larguraFonte, alturaFonte):
+        self.letra = letra
+        self.fonteLetra = fonteLetra
+        self.retangulo = Retangulo
+        self.velocidade = velocidade
+        self.larguraFonte = larguraFonte
+        self.alturaFonte = alturaFonte
+        self.cor = (255,255,255)
+        self.colidiu = False 
+
+    def desenha_lista_movendo(self):
+        
+        letraTela = self.fonteLetra.render(self.letra, True, self.cor)
+        window.blit(letraTela, self.retangulo)
+
+        self.retangulo.x -= self.velocidade
+
+        if self.retangulo.x < 0:
+            self.retangulo.x = 1700
+            self.cor = (255,255,255)
+            self.colidiu = False
+
+
+class disparo(pygame.sprite.Sprite):
+    def __init__(self,x,y):
+        pygame.sprite.Sprite.__init__(self)
+        self.x = x
+        self.y = y
+        disparo = pygame.image.load('img/Flame5.png')
+        self.image = pygame.transform.scale(disparo,(20,15))
+        self.rect = self.image.get_rect()
+        self.rect.center = [x,y]
+
+    def update(self):
+        global listaOpcoes
+        global palavraSorteada
+        global letrasPalavra
+        self.rect.y -= 10
+
+        for i in range(26):
+            
+            if self.rect.colliderect(listaOpcoes[i].retangulo) and not listaOpcoes[i].colidiu:
+                self.kill()  
+                listaOpcoes[i].cor = (0,0,0)
+
+                listaOpcoes[i].colidiu = True
+
+                if listaOpcoes[i].letra in palavraSorteada:
+                    for letra in range (len(palavraSorteada)):
+                        if palavraSorteada[letra] == listaOpcoes[i].letra:
+                            letrasPalavra[letra].letra = listaOpcoes[i].letra
+
+        
+        if self.rect.y < 0:  
+            self.kill()
+
+class letra():
+    def __init__(self,letra,fonteUsada,x,y,larguraFonte,alturaFonte):
+        self.letra = letra
+        self.fonteUsada = fonteUsada
+        self.x = x
+        self.y = y
+        self.larguraFonte = larguraFonte
+        self.alturaFonte = alturaFonte
+        self.cor = (255,255,255)
+
+    def desenha_letras(self):
+        retangulo = pygame.draw.rect(window,(255,0,0),(self.x,500,self.larguraFonte,self.alturaFonte))
+
+        letraTela = self.fonteUsada.render(self.letra, True, self.cor)
+
+        x_letra = retangulo.centerx - letraTela.get_width() // 2
+        y_letra = retangulo.centery - letraTela.get_height() // 2
+
+        # Desenha a letra na posição correta
+        window.blit(letraTela, (x_letra, y_letra))
+
+
+
+def escreve_texto(texto,fonte,corTexto,posicaoX,posicaoY):
+    textoEscrito = fonte.render(texto,True,corTexto)
+    window.blit(textoEscrito,(posicaoX,posicaoY))
+
+def sorteia_palavra():
+    with open("palavras.txt", encoding="utf-8 ") as arquivo: # Lê o arquivo na forma de "utf-8"
+        palavras = arquivo.readlines() # Lê cada linha do arquivo e guarda elas em uma lista
+        palavras = list(map(str.strip, palavras)) # Remove possiveis espaços em brancono inicio e no final da lista
+        palavraSorteada = random.choice(palavras).upper() # padroniza a palavra sorteada para que todas as letras sejam minusculas
+    return palavraSorteada
+
+def desenha_retangulo_conteiner():
+    pygame.draw.rect(window,(21,0,80),(25,475,750,100),border_radius=90)
+
 def teste():
     global jogar
     jogar = True
@@ -77,37 +221,63 @@ if __name__ == "__main__":
     bg = pygame.image.load('img/background_space2.png')
     bg = pygame.transform.scale(bg, (largura,altura))
 
-
     bgInicio = pygame.image.load('img/fundo2.jpg')
     bgInicio = pygame.transform.scale(bgInicio, (largura,altura))
 
-    #configs nave principal
-    velocidade_nave1 = 7
-    posicao_nave1_x = 400
-    posicao_nave1_y = 300
-    tamanho_nave_principal = (95,95)
-    tamanho_disparo_nave = (100,100)
-    nave_principal = pygame.image.load('img/navePrincipal.png')
-    nave_principal = pygame.transform.scale(nave_principal, tamanho_nave_principal)
-    disparo_nave = pygame.image.load('img/Flame_02.png')
-    disparo_nave = pygame.transform.scale(disparo_nave, tamanho_disparo_nave)
-
-    pos_missel_x = 400
-    pos_missel_y = 300
-    vel_y_missel = 0
+    fonteAlfabeto = pygame.font.SysFont("arialblack",40)
+    fonteLetrasPalavraSorteada = pygame.font.SysFont("arialblack",40)
     
+    larguraFontePalavraSorteada = fonteLetrasPalavraSorteada.size("Tg")[0]
+    alturaFontePalavraSorteada = fonteLetrasPalavraSorteada.size("Tg")[1]
+
+    larguraFonteAlfabeto = fonteAlfabeto.size("Tg")[0]
+    alturaFonteAlfabeto = fonteAlfabeto.size("Tg")[1]
+
+    listaAlfabeto = list(string.ascii_uppercase)
+
+    listaRetangulos = []
+
+    xRetangulosConteiners = 100
+
+    letrasPalavra = []
+
+    grupoTiros = pygame.sprite.Group()
 
 
-    def respawn_missel():
-        disparo = False
-        respawn_missel_x = posicao_nave1_x
-        respawn_missel_y = posicao_nave1_y
-        vel_y_missel = 0
-        return [respawn_missel_x, respawn_missel_y, disparo, vel_y_missel]
+    palavraSorteada = sorteia_palavra()
+
+
+    for i in range(26):
+        listaRetangulos.append(pygame.Rect(xRetangulosConteiners,100,larguraFonteAlfabeto,alturaFonteAlfabeto))
+        xRetangulosConteiners += 65
+
+    listaOpcoes = []
+    
+    for i in range(26):
+        listaOpcoes.append(alfabeto(listaAlfabeto[i],fonteAlfabeto,listaRetangulos[i],5,larguraFonteAlfabeto,alturaFonteAlfabeto))
+
+    largura = (larguraFontePalavraSorteada + 10) * len(palavraSorteada)
+
+    xRetanguloLetraAtual = int(400 - largura / 2)
+
+    backup = xRetanguloLetraAtual
+
+    letrasPalavra = []
+
+
+    for i in range(len(palavraSorteada)):
+        letrasPalavra.append(letra(palavraSorteada[i],fonteLetrasPalavraSorteada,xRetanguloLetraAtual,500,larguraFontePalavraSorteada,alturaFontePalavraSorteada))
+
+        xRetanguloLetraAtual += (larguraFontePalavraSorteada + 10)
+
+
+
+    jogador = usuario(370,400,5)
 
     jogar = False
     jogo = True
-    disparo = False
+    contando = True
+
     while jogo:
         for evento in pygame.event.get():
             if evento.type == pygame.QUIT:
@@ -115,43 +285,40 @@ if __name__ == "__main__":
                 sys.exit()
 
         if jogar:
-            # movimentacao da nave principal
-            comandos = pygame.key.get_pressed()
-            if comandos[pygame.K_UP]: #and posicao_frog_y >= 0:
-                posicao_nave1_y -= velocidade_nave1
-                if not disparo:
-                    pos_missel_y -= velocidade_nave1
-            if comandos[pygame.K_DOWN]: #and posicao_frog_y <= 535:
-                posicao_nave1_y += velocidade_nave1
-                if not disparo:
-                    pos_missel_y += velocidade_nave1
-            if comandos[pygame.K_RIGHT]: #and posicao_frog_x <= 745:
-                posicao_nave1_x += velocidade_nave1
-                if not disparo:
-                    pos_missel_x += velocidade_nave1
-            if comandos[pygame.K_LEFT]: #and posicao_frog_x >= 12:
-                posicao_nave1_x -= velocidade_nave1
-                if not disparo:
-                    pos_missel_x -= velocidade_nave1
-            if comandos[pygame.K_SPACE]:
-                disparo = True
-                vel_y_missel = 4
-            
-            if pos_missel_y <= 0:
-                respawn_missel_x, respawn_missel_y, disparo, vel_y_missel = respawn_missel()
 
-            pos_missel_y  -= vel_y_missel
-            window.blit(bg, (0, 0))
-            window.blit(disparo_nave, (pos_missel_x,pos_missel_y))
-            window.blit(nave_principal, (posicao_nave1_x, posicao_nave1_y))
+            if contando:
+                tempo = pygame.time.get_ticks()
+                if tempo > 3000:
+                    for i in range(len(palavraSorteada)):
+                        letrasPalavra[i].letra = "_"
+
+                    contando = False
+
+            window.blit(bg,(0,0))
+
+            for i in range(26):         
+                listaOpcoes[i].desenha_lista_movendo()
+
+            desenha_retangulo_conteiner()
+            
+            for i in range(len(palavraSorteada)):
+                letrasPalavra[i].desenha_letras()
+
+            jogador.move()
+            jogador.tiro()
+
+            grupoTiros.draw(window)
+
+            grupoTiros.update()
 
         else:
-            window.blit(bgInicio, (0,0))
 
+            window.blit(bgInicio, (0,0))
             botaojogar.desenha_botao()
             botaojogar.click()
 
             botaoQUIT.desenha_botao()
             botaoQUIT.click()
+
         pygame.display.update()
         relogio.tick(60)
