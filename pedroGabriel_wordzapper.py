@@ -86,11 +86,28 @@ if __name__ == "__main__":
     posicao_nave1_x = 400
     posicao_nave1_y = 300
     tamanho_nave_principal = (95,95)
+    tamanho_disparo_nave = (100,100)
     nave_principal = pygame.image.load('img/navePrincipal.png')
     nave_principal = pygame.transform.scale(nave_principal, tamanho_nave_principal)
+    disparo_nave = pygame.image.load('img/Flame_02.png')
+    disparo_nave = pygame.transform.scale(disparo_nave, tamanho_disparo_nave)
+
+    pos_missel_x = 400
+    pos_missel_y = 300
+    vel_y_missel = 0
+    
+
+
+    def respawn_missel():
+        disparo = False
+        respawn_missel_x = posicao_nave1_x
+        respawn_missel_y = posicao_nave1_y
+        vel_y_missel = 0
+        return [respawn_missel_x, respawn_missel_y, disparo, vel_y_missel]
 
     jogar = False
     jogo = True
+    disparo = False
     while jogo:
         for evento in pygame.event.get():
             if evento.type == pygame.QUIT:
@@ -102,16 +119,32 @@ if __name__ == "__main__":
             comandos = pygame.key.get_pressed()
             if comandos[pygame.K_UP]: #and posicao_frog_y >= 0:
                 posicao_nave1_y -= velocidade_nave1
+                if not disparo:
+                    pos_missel_y -= velocidade_nave1
             if comandos[pygame.K_DOWN]: #and posicao_frog_y <= 535:
                 posicao_nave1_y += velocidade_nave1
+                if not disparo:
+                    pos_missel_y += velocidade_nave1
             if comandos[pygame.K_RIGHT]: #and posicao_frog_x <= 745:
                 posicao_nave1_x += velocidade_nave1
+                if not disparo:
+                    pos_missel_x += velocidade_nave1
             if comandos[pygame.K_LEFT]: #and posicao_frog_x >= 12:
                 posicao_nave1_x -= velocidade_nave1
+                if not disparo:
+                    pos_missel_x -= velocidade_nave1
+            if comandos[pygame.K_SPACE]:
+                disparo = True
+                vel_y_missel = 4
+            
+            if pos_missel_y <= 0:
+                respawn_missel_x, respawn_missel_y, disparo, vel_y_missel = respawn_missel()
 
+            pos_missel_y  -= vel_y_missel
             window.blit(bg, (0, 0))
+            window.blit(disparo_nave, (pos_missel_x,pos_missel_y))
             window.blit(nave_principal, (posicao_nave1_x, posicao_nave1_y))
-        
+
         else:
             window.blit(bgInicio, (0,0))
 
