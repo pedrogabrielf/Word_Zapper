@@ -3,16 +3,18 @@ import sys
 import string
 import random
 
-#Classe principal do jogo 
-class usuario:
+# Classe principal do jogo 
+class principal:
     def __init__(self,posicao_inicial_x,posicao_inicial_y,velocidade):
-        espaconave = pygame.image.load('img/navePrincipal.png')
-        self.nave = pygame.transform.scale(espaconave, (100,100))
+        espaconave = pygame.image.load('img/naveEspacial.png')
+        self.nave = pygame.transform.scale(espaconave, (75,75))
         self.rect = pygame.Rect(posicao_inicial_x, posicao_inicial_y, self.nave.get_width(), self.nave.get_height())
         self.rect.topleft = posicao_inicial_x,posicao_inicial_y
         self.velocidade = velocidade
 
         self.tiro_disparado = False
+
+    # Funcao para movimentacao da nave
 
     def move(self):
         window.blit(self.nave,self.rect)
@@ -24,12 +26,12 @@ class usuario:
 
         if pygame.key.get_pressed()[pygame.K_RIGHT]:
             self.rect.x += self.velocidade
-            if self.rect.x >= 760:
+            if self.rect.x >= 1210:
                 self.rect.x -= self.velocidade
 
         if pygame.key.get_pressed()[pygame.K_DOWN]:
             self.rect.y += self.velocidade
-            if self.rect.y >= 425:
+            if self.rect.y >= 525:
                 self.rect.y -= self.velocidade
 
         if pygame.key.get_pressed()[pygame.K_UP]:
@@ -37,7 +39,7 @@ class usuario:
             if self.rect.y < 150:
                 self.rect.y += self.velocidade
 
-
+    # Fucao para o tiro 
     def tiro(self):
         if pygame.key.get_pressed()[pygame.K_SPACE] and not self.tiro_disparado:
             tiro = disparo(self.rect.center[0],self.rect.top)
@@ -47,7 +49,7 @@ class usuario:
         elif not pygame.key.get_pressed()[pygame.K_SPACE]:
             self.tiro_disparado = False
 
- 
+ # Funcao coringa para todos os botoes
 class botao():
     def __init__(self,texto,x,y,largura,altura,funcao):
         # Atributos padrões para verificações por motivos de performace
@@ -133,8 +135,11 @@ class disparo(pygame.sprite.Sprite):
         global listaOpcoes
         global palavraSorteada
         global letrasPalavra
+
+        #Vel disparo
         self.rect.y -= 10
 
+        # Configs colisao
         for i in range(26):
             
             if self.rect.colliderect(listaOpcoes[i].retangulo) and not listaOpcoes[i].colidiu:
@@ -162,8 +167,10 @@ class letra():
         self.alturaFonte = alturaFonte
         self.cor = (0,0,0)
 
+    # Desenhas as letras da palavra sorteada para o jogador ver as letras que tera que acertar !
+
     def desenha_letras(self):
-        retangulo = pygame.draw.rect(window,(255,0,0),(self.x,520,self.larguraFonte,self.alturaFonte))
+        retangulo = pygame.draw.rect(window,(85, 232, 84),(self.x,620,self.larguraFonte,self.alturaFonte), border_radius=10)
 
         letraTela = self.fonteUsada.render(self.letra, True, self.cor)
 
@@ -186,8 +193,10 @@ def sorteia_palavra():
         palavraSorteada = random.choice(palavras).upper() # padroniza a palavra sorteada para que todas as letras sejam minusculas
     return palavraSorteada
 
+
+#pensando se vou deixar ele 
 def desenha_retangulo_conteiner():
-    pygame.draw.rect(window,(21,0,80),(-40,500,5000,100),border_radius=90)
+    pygame.draw.rect(window,(21,0,80),(-40,600,5000,100),border_radius=90)
 
 def teste():
     global jogar
@@ -202,8 +211,8 @@ if __name__ == "__main__":
     pygame.font.init()
     relogio = pygame.time.Clock()
 
-    largura = 1000
-    altura = 700
+    largura = 1280
+    altura = 720
 
     window = pygame.display.set_mode((largura, altura))
     pygame.display.set_caption("WordZapper")
@@ -211,8 +220,8 @@ if __name__ == "__main__":
     #fonte texto
     fonte_texto = pygame.font.SysFont("arial", 30)
 
-    botaojogar = botao("JOGAR", 400, 275, 200, 100, teste)
-    botaoQUIT = botao("QUIT", 450,450,100,100,jogarFalse)
+    botaojogar = botao("JOGAR", 530, 275, 200, 100, teste)
+    botaoQUIT = botao("QUIT", 575,450,100,100,jogarFalse)
 
     #configs background
     tamanho_bg= (55,55)
@@ -222,20 +231,20 @@ if __name__ == "__main__":
     bgInicio = pygame.image.load('img/fundo2.jpg')
     bgInicio = pygame.transform.scale(bgInicio, (largura,altura))
 
-    fonteAlfabeto = pygame.font.SysFont("arialblack",40)
+    fonteAlfabeto = pygame.font.SysFont("arialblack",50)
     fonteLetrasPalavraSorteada = pygame.font.SysFont("arialblack",40)
-    
-    larguraFontePalavraSorteada = fonteLetrasPalavraSorteada.size("Tg")[0]
-    alturaFontePalavraSorteada = fonteLetrasPalavraSorteada.size("Tg")[1]
+    # Tg exemplo de fonte que e utilizado
+    larguraFontePalavraSorteada = fonteLetrasPalavraSorteada.size("Ym")[0]
+    alturaFontePalavraSorteada = fonteLetrasPalavraSorteada.size("Ym")[1]
 
-    larguraFonteAlfabeto = fonteAlfabeto.size("Tg")[0]
-    alturaFonteAlfabeto = fonteAlfabeto.size("Tg")[1]
+    larguraFonteAlfabeto = fonteAlfabeto.size("Ym")[0]
+    alturaFonteAlfabeto = fonteAlfabeto.size("Ym")[1]
 
     listaAlfabeto = list(string.ascii_uppercase)
 
     listaRetangulos = []
 
-    xRetangulosConteiners = 100
+    xRetangulosConteiners = 50
 
     letrasPalavra = []
 
@@ -243,19 +252,21 @@ if __name__ == "__main__":
 
     palavraSorteada = sorteia_palavra()
 
-    # Seta alfabeto na tela e a respectiva distantia entre as letras
+    # Seta alfabeto na tela e a respectiva distantia entre as letras e tambem altura
     for i in range(26):
-        listaRetangulos.append(pygame.Rect(xRetangulosConteiners,100,larguraFonteAlfabeto,alturaFonteAlfabeto))
+        listaRetangulos.append(pygame.Rect(xRetangulosConteiners,75,larguraFonteAlfabeto,alturaFonteAlfabeto))
         xRetangulosConteiners += 65
 
     listaOpcoes = []
     
+    #configs alfabeto
     for i in range(26):
         listaOpcoes.append(alfabeto(listaAlfabeto[i],fonteAlfabeto,listaRetangulos[i],5,larguraFonteAlfabeto,alturaFonteAlfabeto))
 
     largura = (larguraFontePalavraSorteada + 10) * len(palavraSorteada)
+
     # Retangulo da palavra sorteada 
-    xRetanguloLetraAtual = int(440 - largura / 2)
+    xRetanguloLetraAtual = int(580 - largura / 2)
     
     backup = xRetanguloLetraAtual
 
@@ -269,11 +280,11 @@ if __name__ == "__main__":
 
 
 
-    jogador = usuario(370,400,5)
+    jogador = principal(370,400,5)
 
     jogar = False
     jogo = True
-    contando = True
+    contador = True
 
     while jogo:
         for evento in pygame.event.get():
@@ -282,14 +293,13 @@ if __name__ == "__main__":
                 sys.exit()
 
         if jogar:
-
-            if contando:
+            if contador:
                 tempo = pygame.time.get_ticks()
                 if tempo > 3000:
                     for i in range(len(palavraSorteada)):
                         letrasPalavra[i].letra = "_"
 
-                    contando = False
+                    contador = False
 
             window.blit(bg,(0,0))
 
