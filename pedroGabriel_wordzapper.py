@@ -3,6 +3,7 @@ import sys
 import string
 import random
 
+#Classe principal do jogo 
 class usuario:
     def __init__(self,posicao_inicial_x,posicao_inicial_y,velocidade):
         espaconave = pygame.image.load('img/navePrincipal.png')
@@ -36,10 +37,7 @@ class usuario:
             if self.rect.y < 150:
                 self.rect.y += self.velocidade
 
-    def volta_comeco(self):
-        self.rect.x = 380
-        self.rect.y = 400
-    
+
     def tiro(self):
         if pygame.key.get_pressed()[pygame.K_SPACE] and not self.tiro_disparado:
             tiro = disparo(self.rect.center[0],self.rect.top)
@@ -60,7 +58,7 @@ class botao():
         self.corBotao = (100,100,100)
 
         # escreve o texto na superficie
-        self.texto = fonte_texto.render(texto,True,(255,255,255))
+        self.texto = fonte_texto.render(texto,True,(255,255,0))
         # Obtem o tamanho do texto e o guarda dentro do retangulo que ira conter-lo
         self.retanguloTamnhoTexto = self.texto.get_rect(center=(self.retanguloConteiner.centerx, self.retanguloConteiner.centery))
 
@@ -90,12 +88,12 @@ class botao():
                 
             # Quando a condição acima deixar de ser verdadeira ou seja o player deixou de pressionar o botao então a booleana volta a ser falsa por padrao e se executa a ação
             else:
-                # Isso é feito dessa forma por conta de que aou se colocar uma grande quantidade de frames na execução do jogo essa ação seria executada varias vezes o que pode comprometer a performace do jogo em determinados dispositivos
+                # Isso é feito dessa forma por conta de que ao se colocar uma grande quantidade de frames na execução do jogo essa ação seria executada varias vezes o que pode comprometer a performace do jogo em determinados dispositivos
                 if self.clicou == True:
                     self.clicou = False
                     self.funcao()
         else:
-            self.corBotao = (200,100,100)
+            self.corBotao = (200,100,0)
 
 class alfabeto():
     def __init__(self,letra, fonteLetra, Retangulo, velocidade, larguraFonte, alturaFonte):
@@ -106,7 +104,7 @@ class alfabeto():
         self.larguraFonte = larguraFonte
         self.alturaFonte = alturaFonte
         self.cor = (255,255,255)
-        self.colidiu = False 
+        self.colidiu = False
 
     def desenha_lista_movendo(self):
         
@@ -117,7 +115,7 @@ class alfabeto():
 
         if self.retangulo.x < 0:
             self.retangulo.x = 1700
-            self.cor = (255,255,255)
+            self.cor = (255,255,255,100)
             self.colidiu = False
 
 
@@ -162,10 +160,10 @@ class letra():
         self.y = y
         self.larguraFonte = larguraFonte
         self.alturaFonte = alturaFonte
-        self.cor = (255,255,255)
+        self.cor = (0,0,0)
 
     def desenha_letras(self):
-        retangulo = pygame.draw.rect(window,(255,0,0),(self.x,500,self.larguraFonte,self.alturaFonte))
+        retangulo = pygame.draw.rect(window,(255,0,0),(self.x,520,self.larguraFonte,self.alturaFonte))
 
         letraTela = self.fonteUsada.render(self.letra, True, self.cor)
 
@@ -189,7 +187,7 @@ def sorteia_palavra():
     return palavraSorteada
 
 def desenha_retangulo_conteiner():
-    pygame.draw.rect(window,(21,0,80),(25,475,750,100),border_radius=90)
+    pygame.draw.rect(window,(21,0,80),(-40,500,5000,100),border_radius=90)
 
 def teste():
     global jogar
@@ -218,7 +216,7 @@ if __name__ == "__main__":
 
     #configs background
     tamanho_bg= (55,55)
-    bg = pygame.image.load('img/background_space2.png')
+    bg = pygame.image.load('img/background_space.png')
     bg = pygame.transform.scale(bg, (largura,altura))
 
     bgInicio = pygame.image.load('img/fundo2.jpg')
@@ -243,10 +241,9 @@ if __name__ == "__main__":
 
     grupoTiros = pygame.sprite.Group()
 
-
     palavraSorteada = sorteia_palavra()
 
-
+    # Seta alfabeto na tela e a respectiva distantia entre as letras
     for i in range(26):
         listaRetangulos.append(pygame.Rect(xRetangulosConteiners,100,larguraFonteAlfabeto,alturaFonteAlfabeto))
         xRetangulosConteiners += 65
@@ -257,18 +254,18 @@ if __name__ == "__main__":
         listaOpcoes.append(alfabeto(listaAlfabeto[i],fonteAlfabeto,listaRetangulos[i],5,larguraFonteAlfabeto,alturaFonteAlfabeto))
 
     largura = (larguraFontePalavraSorteada + 10) * len(palavraSorteada)
-
-    xRetanguloLetraAtual = int(400 - largura / 2)
-
+    # Retangulo da palavra sorteada 
+    xRetanguloLetraAtual = int(440 - largura / 2)
+    
     backup = xRetanguloLetraAtual
 
     letrasPalavra = []
 
 
     for i in range(len(palavraSorteada)):
-        letrasPalavra.append(letra(palavraSorteada[i],fonteLetrasPalavraSorteada,xRetanguloLetraAtual,500,larguraFontePalavraSorteada,alturaFontePalavraSorteada))
+        letrasPalavra.append(letra(palavraSorteada[i],fonteLetrasPalavraSorteada,xRetanguloLetraAtual,550,larguraFontePalavraSorteada,alturaFontePalavraSorteada))
 
-        xRetanguloLetraAtual += (larguraFontePalavraSorteada + 10)
+        xRetanguloLetraAtual += (larguraFontePalavraSorteada + 30)
 
 
 
