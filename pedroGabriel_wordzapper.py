@@ -39,6 +39,7 @@ class principal:
             if self.rect.y < 150:
                 self.rect.y += self.velocidade
 
+
     # Fucao para o tiro 
     def tiro(self):
         if pygame.key.get_pressed()[pygame.K_SPACE] and not self.tiro_disparado:
@@ -117,7 +118,7 @@ class alfabeto():
 
         if self.retangulo.x < 0:
             self.retangulo.x = 1700
-            self.cor = (255,255,255,100)
+            self.cor = (255,255,255)
             self.colidiu = False
 
 
@@ -195,7 +196,6 @@ def sorteia_palavra():
         palavras = list(map(str.strip, palavras)) # Remove possiveis espaços em brancono inicio e no final da lista
         palavraSorteada = random.choice(palavras).upper() # padroniza a palavra sorteada para que todas as letras sejam minusculas
     return palavraSorteada
-
 
 
 def teste():
