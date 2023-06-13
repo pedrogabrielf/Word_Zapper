@@ -2,20 +2,19 @@ import pygame
 import sys
 import string
 import random
-
+import os
+from pathlib import Path
 # Classe principal do jogo 
 class principal:
     def __init__(self,posicao_inicial_x,posicao_inicial_y,velocidade):
-        espaconave = pygame.image.load('img/naveEspacial.png')
+        espaconave = pygame.image.load(caminho_arquivo('naveEspacial.png'))
         self.nave = pygame.transform.scale(espaconave, (75,75))
         self.rect = pygame.Rect(posicao_inicial_x, posicao_inicial_y, self.nave.get_width(), self.nave.get_height())
         self.rect.topleft = posicao_inicial_x,posicao_inicial_y
         self.velocidade = velocidade
-
         self.tiro_disparado = False
 
     # Funcao para movimentacao da nave
-
     def move(self):
         window.blit(self.nave,self.rect)
 
@@ -53,7 +52,7 @@ class principal:
  # Funcao coringa para todos os botoes
 class botao():
     def __init__(self,texto,x,y,largura,altura,funcao):
-        # Atributos padrões para verificações por motivos de performace
+
         self.clicou = False
 
         # Especifica o retangulo que sera desenhado
@@ -109,7 +108,7 @@ class alfabeto():
         self.cor = (255,255,255)
         self.colidiu = False
 
-    def desenha_lista_movendo(self):
+    def desenha_alfabeto_movendo(self):
         
         letraTela = self.fonteLetra.render(self.letra, True, self.cor)
         window.blit(letraTela, self.retangulo)
@@ -127,7 +126,7 @@ class disparo(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         self.x = x
         self.y = y
-        disparo = pygame.image.load('img/Flame5.png')
+        disparo = pygame.image.load(caminho_arquivo('Flame5.png'))
         self.image = pygame.transform.scale(disparo,(20,15))
         self.rect = self.image.get_rect()
         self.rect.center = [x,y]
@@ -137,6 +136,7 @@ class disparo(pygame.sprite.Sprite):
         global palavraSorteada
         global letrasPalavra
         global venceu
+        global listaVerificacao
 
         #Vel disparo
         self.rect.y -= 10
@@ -153,9 +153,12 @@ class disparo(pygame.sprite.Sprite):
                 if listaOpcoes[i].letra in palavraSorteada:
                     for letra in range (len(palavraSorteada)):
                         if palavraSorteada[letra] == listaOpcoes[i].letra:
-                            letrasPalavra[letra].letra = listaOpcoes[i].letra
+                            letrasPalavra[letra].letra = palavraSorteada[letra]
+                            listaVerificacao[letra] = palavraSorteada[letra]
+                            print(listaVerificacao)
+                            if "_" not in listaVerificacao:
+                                venceu = True
 
-        # Rever isso !!!!!
         if self.rect.y < 0:  
             self.kill()
 
@@ -173,7 +176,7 @@ class letra():
 
     # Desenhas as letras da palavra sorteada para o jogador ver as letras que tera que acertar !
 
-    def desenha_letras(self):
+    def desenha_letras_alfabeto(self):
         retangulo = pygame.draw.rect(window,(85, 232, 84),(self.x,620,self.larguraFonte,self.alturaFonte), border_radius=10)
 
         letraTela = self.fonteUsada.render(self.letra, True, self.cor)
@@ -185,26 +188,33 @@ class letra():
         window.blit(letraTela, (x_letra, y_letra))
 
 
-
+#Funcao para escrever textos na tela 
 def escreve_texto(texto,fonte,corTexto,posicaoX,posicaoY):
     textoEscrito = fonte.render(texto,True,corTexto)
     window.blit(textoEscrito,(posicaoX,posicaoY))
 
+#Funcao para sortear palavras da lista de palavras
 def sorteia_palavra():
-    with open("palavras.txt", encoding="utf-8 ") as arquivo: # Lê o arquivo na forma de "utf-8"
+    with open("Word_Zapper/palavras.txt", encoding="utf-8 ") as arquivo: # Lê o arquivo na forma de "utf-8"
         palavras = arquivo.readlines() # Lê cada linha do arquivo e guarda elas em uma lista
         palavras = list(map(str.strip, palavras)) # Remove possiveis espaços em brancono inicio e no final da lista
         palavraSorteada = random.choice(palavras).upper() # padroniza a palavra sorteada para que todas as letras sejam minusculas
     return palavraSorteada
 
 
-def teste():
-    global jogar
+def paraJogar():
+    global jogar, venceu
     jogar = True
-
+    
 def jogarFalse():
     global jogo
     jogo = False
+
+def caminho_arquivo(nome):
+    caminho = os.getcwd()
+    caminhoAbsoluto = os.path.join(caminho, "Word_Zapper/img", nome)
+    caminhoAbsoluto = Path(caminhoAbsoluto)
+    return caminhoAbsoluto
 
 if __name__ == "__main__":
     pygame.init()
@@ -220,21 +230,21 @@ if __name__ == "__main__":
     #fonte texto
     fonte_texto = pygame.font.SysFont("arial", 30)
 
-    botaojogar = botao("JOGAR", 530, 275, 200, 100, teste)
+    botaojogar = botao("JOGAR", 530, 275, 200, 100, paraJogar)
     botaoQUIT = botao("QUIT", 575,450,100,100,jogarFalse)
 
-    botaojogarDNV = botao("JOGAR NOVAMENTE", 530, 275, 200, 100, teste)
+    botaojogarDNV = botao("JOGAR NOVAMENTE", 530, 275, 300, 100, paraJogar)
 
     #configs background
     tamanho_bg= (55,55)
-    bg = pygame.image.load('img/background_space.png')
+    bg = pygame.image.load(caminho_arquivo('background_space.png'))
     bg = pygame.transform.scale(bg, (largura,altura))
 
-    bgInicio = pygame.image.load('img/fundo2.jpg')
+    bgInicio = pygame.image.load(caminho_arquivo('fundo2.jpg'))
     bgInicio = pygame.transform.scale(bgInicio, (largura,altura))
 
-    fonteAlfabeto = pygame.font.SysFont("arialblack",50)
-    fonteLetrasPalavraSorteada = pygame.font.SysFont("arialblack",40)
+    fonteAlfabeto = pygame.font.Font(caminho_arquivo("fonte.ttf"),50)
+    fonteLetrasPalavraSorteada = pygame.font.Font(caminho_arquivo("fonte.ttf"),50)
     # Tg exemplo de fonte que e utilizado
     larguraFontePalavraSorteada = fonteLetrasPalavraSorteada.size("Ym")[0]
     alturaFontePalavraSorteada = fonteLetrasPalavraSorteada.size("Ym")[1]
@@ -253,6 +263,8 @@ if __name__ == "__main__":
     grupoTiros = pygame.sprite.Group()
 
     palavraSorteada = sorteia_palavra()
+
+    caminho = os.getcwd()
 
     # Seta alfabeto na tela e a respectiva distantia entre as letras e tambem altura
     for i in range(26):
@@ -273,7 +285,8 @@ if __name__ == "__main__":
     backup = xRetanguloLetraAtual
 
     letrasPalavra = []
-
+  
+    listaVerificacao = []
 
     for i in range(len(palavraSorteada)):
         letrasPalavra.append(letra(palavraSorteada[i],fonteLetrasPalavraSorteada,xRetanguloLetraAtual,550,larguraFontePalavraSorteada,alturaFontePalavraSorteada))
@@ -281,7 +294,7 @@ if __name__ == "__main__":
         xRetanguloLetraAtual += (larguraFontePalavraSorteada + 30)
 
 
-    jogador = principal(370,400,5)
+    player = principal(370,400,5)
 
     jogar = False
     jogo = True
@@ -294,41 +307,47 @@ if __name__ == "__main__":
                 pygame.quit()
                 sys.exit()
 
-        if venceu:
-            window.blit(bgInicio, (0,0))
-            botaojogarDNV.desenha_botao()
-            botaojogarDNV.click()
-            botaoQUIT.desenha_botao()
-            botaoQUIT.click()
-
         if jogar:
-            if contador:
-                # Tempo para ver a palavra
-                tempo = pygame.time.get_ticks()
-                if tempo > 3000:
-                    for i in range(len(palavraSorteada)):
-                        letrasPalavra[i].letra = "_"
-
-                    contador = False
-
-            window.blit(bg,(0,0))
-
-            for i in range(26):
-                listaOpcoes[i].desenha_lista_movendo()
-
+            if venceu:
+                window.blit(bgInicio, (0,0))
+                botaojogarDNV.desenha_botao()
+                botaojogarDNV.click()
+                botaoQUIT.desenha_botao()
+                botaoQUIT.click()
             
-            for i in range(len(palavraSorteada)):
-                letrasPalavra[i].desenha_letras()
+            else:
+                if contador:
+                    # Tempo para ver a palavra
+                    tempo = pygame.time.get_ticks()
+                    if tempo > 3000:
+                        for i in range(len(palavraSorteada)):
 
-            jogador.move()
-            jogador.tiro()
+                            if palavraSorteada != "-":
+                                letrasPalavra[i].letra = "_"
+                                listaVerificacao.append("_")
+                            else:
+                                letrasPalavra[i].letra = "-"
+                                listaVerificacao.append("-")
 
-            grupoTiros.draw(window)
+                        contador = False
 
-            grupoTiros.update()
+                window.blit(bg,(0,0))
+
+                for i in range(26):
+                    listaOpcoes[i].desenha_alfabeto_movendo()
+
+                
+                for i in range(len(palavraSorteada)):
+                    letrasPalavra[i].desenha_letras_alfabeto()
+
+                player.move()
+                player.tiro()
+
+                grupoTiros.draw(window)
+
+                grupoTiros.update()
 
         else:
-
             window.blit(bgInicio, (0,0))
             botaojogar.desenha_botao()
             botaojogar.click()

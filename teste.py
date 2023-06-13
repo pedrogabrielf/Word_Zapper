@@ -5,6 +5,7 @@ from sys import exit
 import os
 from pathlib import Path
 import random
+import unicodedata
 
 class usuario:
     def _init_(self,posicao_inicial_x,posicao_inicial_y,velocidade):
@@ -63,7 +64,13 @@ class disparo(pygame.sprite.Sprite):
     def update(self):
         global listaOpcoes
         global palavraSorteada
+        global palavraSorteadaNormalizada
         global letrasPalavra
+        global listaVerificacao
+        global jogando
+        global venceu
+        global perdeu
+        global acertouErrado
         self.rect.y -= 10
 
         for i in range(26):
@@ -74,16 +81,19 @@ class disparo(pygame.sprite.Sprite):
 
                 listaOpcoes[i].colidiu = True
 
-                if listaOpcoes[i].letra in palavraSorteada:
-                    for letra in range (len(palavraSorteada)):
-                        if palavraSorteada[letra] == listaOpcoes[i].letra:
-                            letrasPalavra[letra].letra = listaOpcoes[i].letra
+                if listaOpcoes[i].letra in palavraSorteadaNormalizada:
+                    for letra in range (len(palavraSorteadaNormalizada)):
+                        if palavraSorteadaNormalizada[letra] == listaOpcoes[i].letra:
+                            letrasPalavra[letra].letra = palavraSorteada[letra]
+                            listaVerificacao[letra] = palavraSorteada[letra]
+                            if "_" not in listaVerificacao:
+                                venceu = True
+                else:
+                    acertouErrado += 5
 
-        
         if self.rect.y < 0:  
             self.kill()
 
-        
 class botao():
     def _init_(self,texto,x,y,largura,altura,funcao):
         # Atributos padrões para verificações por motivos de performace
@@ -173,8 +183,42 @@ class letra():
         # Desenha a letra na posição correta
         janela.blit(letraTela, (x_letra, y_letra))
 
-def desenha_retangulo_conteiner():
+class asteroide():
+    def _init_(self,retangulo,velocidade,ladoComeco:str):
+        self.imagem = pygame.image.load(caminho_arquivo("asteroide.png"))
+        self.retangulo = retangulo
+        self.velocidade = velocidade
+        self.ladoComeco = ladoComeco.lower()
+        self.batida = False
+
+    def desenha_asteroide(self):
+        janela.blit(self.imagem,self.retangulo)
+
+    def atualiza_posicao(self):
+        global bateu
+        global listaAsteroides
+        if self.retangulo.colliderect(jogador.rect) and not self.batida:
+            bateu += 5
+            self.batida = True
+        if self.ladoComeco == "direita":
+            self.retangulo.x -= self.velocidade
+
+            if self.retangulo.x < - 100:
+                self.retangulo.x = 800
+                self.batida = False
+
+        if self.ladoComeco == "esquerda":
+            self.retangulo.x += self.velocidade
+
+            if self.retangulo.x > 900:
+                self.retangulo.x = 0
+                self.batida = False
+                
+def desenha_retangulo_conteiner_palavra():
     pygame.draw.rect(janela,(21,0,80),(25,475,750,100),border_radius=90)
+
+def desenha_retangulo_conteiner_contador():
+    pygame.draw.rect(janela,(28,130,173),(330,25,120,70),border_radius=90)
 
 def caminho_arquivo(nome):
     caminho = os.getcwd()
@@ -186,12 +230,47 @@ def escreve_texto(texto,fonte,corTexto,posicaoX,posicaoY):
     textoEscrito = fonte.render(texto,True,corTexto)
     janela.blit(textoEscrito,(posicaoX,posicaoY))
 
+def escreve_texto_envelopado(superficie, texto, fonteTexto, corTexto, retanguloTexto, margem, corRetanguloConteiner, aa=False):
+    y = retanguloTexto.top
+
+    # altura da fonte fornecida com base em uma string de exemplo
+    fontHeight = fonteTexto.size("Tg")[1]
+
+    pygame.draw.rect(janela,corRetanguloConteiner,retanguloTexto)
+
+    # enquanto tiver texto a ser processado
+    while texto:
+        i = 1
+        
+        # Acha o tamanho maximo que o retangulo conporta na sua largura a propria interação nao for maior que o texto analizada
+        while fonteTexto.size(texto[:i])[0] < (retanguloTexto.width - (margem * 2)) and i < len(texto):
+            i += 1
+
+        # Se o texto ja foi envelopado ele procura pela ultima aparição do " " ente as palavras e começa aleitura de là
+        if i < len(texto):
+            i = texto.rfind(" ", 0, i) + 1
+
+        # Renderiza o pequeno pedaço do texto
+        textoRenderizado = fonteTexto.render(texto[:i], aa, corTexto)
+
+        superficie.blit(textoRenderizado, (retanguloTexto.left + margem, y + margem))
+        # Move o texto para a linha de baixo
+        y += fontHeight + 2
+
+        # Remove o texto do string original
+        texto = texto[i:]
+
 def jogo():
     global jogando
     jogando = True
 
-def teste():
-    print("teste")
+def informacaozinha():
+    global informacao
+    informacao = True
+
+def sairzinho():
+    global Jogar
+    Jogar = False
 
 # sorteia a palavra que será usada
 def sorteia_palavra():
@@ -202,7 +281,128 @@ def sorteia_palavra():
 
     return palavraSorteada
 
-if __name__ == "__main__":
+def normaliza(texto):
+    normalizada = unicodedata.normalize('NFD', texto) # Usa a função unicodedata com a opção de normalização "Normalização Canônica Decomposta" para tirar o cedilha e oas acento das letras
+    
+    return normalizada.encode('ascii', 'ignore').decode('utf-8').casefold().upper() # Converte a string para uma string composta somente de caracteres ascii e ignora os que não podem ser decodificados para tabela ascii são ignorados e em seguida os caracteres ascii são convertidos para utf-8 novamente mas sem os caracteres especiais (ç e acentos)
+
+def retorna_menu_inicial():
+    retorna_padrao()
+
+def sairzinho():
+    global jogar
+    jogar = False
+
+def sorteia_velocidade():
+    numeroSorteado = random.randint(1,4)
+
+    return numeroSorteado
+
+def sorteia_lado():
+    listaSelecao = ["esquerda","direita"]
+
+    ladoEscolhido = random.choice(listaSelecao)
+
+    return ladoEscolhido
+
+def retorna_padrao():
+    global contadorEsperaTextoTela
+    global contadorJogandoTextoTela
+    global listaRetangulos
+    global listaOpcoes
+    global letrasPalavra
+    global listaVerificacao
+    global listaAsteroides
+    global jogar
+    global jogando
+    global informacao
+    global contando
+    global obtemTempoComparacao
+    global venceu
+    global perdeu
+    global contandoJogo
+    global acertouErrado
+    global bateu
+    global palavraSorteada
+    global palavraSorteadaNormalizada
+    global largura
+    global xRetanguloLetraAtual
+    global xRetangulosConteiners
+    global backup
+
+    contadorEsperaTextoTela = ""
+
+    contadorJogandoTextoTela = ""
+
+    listaRetangulos = []
+
+    listaOpcoes = []
+
+    letrasPalavra = []
+
+    listaVerificacao = []
+
+    listaAsteroides = []
+
+    jogar = True
+
+    jogando = False
+
+    informacao = False
+
+    contando = True
+
+    obtemTempoComparacao = True
+
+    venceu = False
+
+    perdeu = False
+
+    contandoJogo = True
+
+    acertouErrado = 0
+
+    bateu = 0
+
+    palavraSorteada = sorteia_palavra()
+
+    palavraSorteadaNormalizada = normaliza(palavraSorteada)
+
+    largura = (larguraFontePalavraSorteada + 10) * len(palavraSorteada)
+
+    xRetanguloLetraAtual = int(400 - largura / 2)
+
+    xRetangulosConteiners = 100
+
+    backup = xRetanguloLetraAtual
+
+    yAsteroide = 190
+
+    for i in range(26):
+        listaRetangulos.append(pygame.Rect(xRetangulosConteiners,100,larguraFonteAlfabeto,alturaFonteAlfabeto))
+        xRetangulosConteiners += 65
+
+    for i in range(26):
+    
+        listaOpcoes.append(alfabeto(listaAlfabeto[i],fonteAlfabeto,listaRetangulos[i],5,larguraFonteAlfabeto,alturaFonteAlfabeto))
+
+    for i in range(len(palavraSorteada)):
+        letrasPalavra.append(letra(palavraSorteada[i],fonteLetrasPalavraSorteada,xRetanguloLetraAtual,500,larguraFontePalavraSorteada,alturaFontePalavraSorteada))
+
+        xRetanguloLetraAtual += (larguraFontePalavraSorteada + 10)
+
+    for i in range(1,5):
+        numeroSorteado = sorteia_velocidade()
+        ladoEscolhido = sorteia_lado()
+        if i % 2 == 0:
+            listaAsteroides.append(asteroide(pygame.Rect(800,yAsteroide,100,100),numeroSorteado,ladoEscolhido))
+            yAsteroide += 75
+        else:
+            listaAsteroides.append(asteroide(pygame.Rect(0,yAsteroide,100,100),numeroSorteado,ladoEscolhido))
+            yAsteroide += 75
+
+
+if _name_ == "_main_":
     pygame.init()
     pygame.font.init()
 
@@ -218,6 +418,8 @@ if __name__ == "__main__":
     fonteAlfabeto = pygame.font.SysFont("arialblack",40)
     fonteLetrasPalavraSorteada = pygame.font.SysFont("arialblack",40)
 
+    fonteContadorEspera = pygame.font.SysFont("arialblack",60)
+
     larguraFonteAlfabeto = fonteAlfabeto.size("Tg")[0]
     alturaFonteAlfabeto = fonteAlfabeto.size("Tg")[1]
 
@@ -227,49 +429,105 @@ if __name__ == "__main__":
     cenario = pygame.image.load(caminho_arquivo("cenario3.jpg"))
     cenario = pygame.transform.scale(cenario,(800,600))
 
+    cenarioVenceu = pygame.image.load(caminho_arquivo("venceu.jpg"))
+    cenarioVenceu = pygame.transform.scale(cenarioVenceu,(800,600))
+
+    cenarioPerdeu = pygame.image.load(caminho_arquivo("perdeu.jpg"))
+    cenarioPerdeu = pygame.transform.scale(cenarioPerdeu,(800,600))
+
+    naveEspera = pygame.image.load(caminho_arquivo("nave.png"))
+
+    imagemWASD = pygame.image.load(caminho_arquivo("wasd.png"))
+
+    imagemP = pygame.image.load(caminho_arquivo("p.png"))
+
+    textoInfo = """Este programa foi feito usando por Matheus Marques Eiras estudante de bachalelado em Ciência da computação no Instituto Federal do Paraná campus Pinhais (IFPR - Pinhais)"""
+
+    retanguloConteinerInformacao = pygame.Rect(50,400,700,150)
+
     botaoJogar = botao("jogar",250,150,300,50,jogo)
-    botaoInformacoes = botao("Informações e comandos",250,250,300,50,teste)
-    botaoSairMenuInicial = botao("Sair",250,350,300,50,teste)
+    botaoInformacoes = botao("Informações e comandos",250,250,300,50,informacaozinha)
+    botaoSairMenuInicial = botao("Sair",250,350,300,50,sairzinho)
+
+    jogarNovamente = botao("Jogar novamente?",100,350,250,50,retorna_menu_inicial)
+    sairMenuFinal = botao("Sair",450,350,250,50,sairzinho)
+
+    jogador = usuario(370,400,5)
 
     grupoTiros = pygame.sprite.Group()
 
     listaAlfabeto = list(string.ascii_uppercase)
 
+    contadorEsperaTextoTela = ""
+
+    contadorJogandoTextoTela = ""
+
     listaRetangulos = []
 
-    xRetangulosConteiners = 100
-
-    for i in range(26):
-        listaRetangulos.append(pygame.Rect(xRetangulosConteiners,100,larguraFonteAlfabeto,alturaFonteAlfabeto))
-        xRetangulosConteiners += 65
-
     listaOpcoes = []
-    
-    for i in range(26):
-        listaOpcoes.append(alfabeto(listaAlfabeto[i],fonteAlfabeto,listaRetangulos[i],5,larguraFonteAlfabeto,alturaFonteAlfabeto))
 
-    jogador = usuario(370,400,5)
+    letrasPalavra = []
+
+    listaVerificacao = []
+
+    listaAsteroides = []
 
     jogar = True
 
     jogando = False
+    
+    informacao = False
+
+    contando = True
+
+    obtemTempoComparacao = True
+
+    venceu = False
+
+    perdeu = False
+
+    contandoJogo = True
+
+    acertouErrado = 0
+
+    bateu = 0
 
     palavraSorteada = sorteia_palavra()
+
+    palavraSorteadaNormalizada = normaliza(palavraSorteada)
 
     largura = (larguraFontePalavraSorteada + 10) * len(palavraSorteada)
 
     xRetanguloLetraAtual = int(400 - largura / 2)
 
+    xRetangulosConteiners = 100
+
     backup = xRetanguloLetraAtual
 
-    letrasPalavra = []
+    yAsteroide = 190
+
+    for i in range(26):
+        listaRetangulos.append(pygame.Rect(xRetangulosConteiners,100,larguraFonteAlfabeto,alturaFonteAlfabeto))
+        xRetangulosConteiners += 65
+
+    for i in range(26):
+    
+        listaOpcoes.append(alfabeto(listaAlfabeto[i],fonteAlfabeto,listaRetangulos[i],5,larguraFonteAlfabeto,alturaFonteAlfabeto))
 
     for i in range(len(palavraSorteada)):
         letrasPalavra.append(letra(palavraSorteada[i],fonteLetrasPalavraSorteada,xRetanguloLetraAtual,500,larguraFontePalavraSorteada,alturaFontePalavraSorteada))
 
         xRetanguloLetraAtual += (larguraFontePalavraSorteada + 10)
 
-    contando = True
+    for i in range(1,5):
+        numeroSorteado = sorteia_velocidade()
+        ladoEscolhido = sorteia_lado()
+        if i % 2 == 0:
+            listaAsteroides.append(asteroide(pygame.Rect(800,yAsteroide,100,100),numeroSorteado,ladoEscolhido))
+            yAsteroide += 75
+        else:
+            listaAsteroides.append(asteroide(pygame.Rect(0,yAsteroide,100,100),numeroSorteado,ladoEscolhido))
+            yAsteroide += 75
 
     while jogar:
         relogio.tick(100)
@@ -285,34 +543,142 @@ if __name__ == "__main__":
                 if pygame.key.get_pressed()[K_p]:
                     jogador.volta_comeco()
                     jogando = False
+                    retorna_padrao()
 
         if jogando:
+            if venceu:
+                janela.fill((0,0,0))
 
-            if contando:
-                tempo = pygame.time.get_ticks()
-                print(tempo)
-                if tempo > 3000:
+                janela.blit(cenarioVenceu,(0,0))
+
+                escreve_texto("Parabens você chegou ao seu destino",fonte_titulo,(255,255,255),100,250)
+                escreve_texto("Jogar novamente?",fonte_texto,(255,255,255),325,300)
+
+                jogarNovamente.desenha_botao()
+                jogarNovamente.click()
+
+                sairMenuFinal.desenha_botao()
+                sairMenuFinal.click()
+                
+            elif perdeu:
+                janela.fill((0,0,0))
+
+                janela.blit(cenarioPerdeu,(0,0))
+
+                escreve_texto("Você perdeu e nao conseguiu chegar ao seu destino",fonte_titulo,(255,255,255),100,250)
+                escreve_texto("Jogar novamente?",fonte_texto,(255,255,255),325,300)
+
+                jogarNovamente.desenha_botao()
+                jogarNovamente.click()
+
+                sairMenuFinal.desenha_botao()
+                sairMenuFinal.click()
+                
+            else:
+                if obtemTempoComparacao:
+                    tempoMedido = pygame.time.get_ticks()
+                    obtemTempoComparacao = False
+
+                if contando:
+                    tempo = pygame.time.get_ticks()
+                    medida = tempo - tempoMedido
+
+                    if medida > 4500:
+                        for i in range(len(palavraSorteada)):
+                            if palavraSorteada[i] != "-":
+                                letrasPalavra[i].letra = "_"
+                                listaVerificacao.append("_")
+                            else:
+                                letrasPalavra[i].letra = "-"
+                                listaVerificacao.append("-")
+
+
+                        contando = False
+                    
+                    janela.blit(cenario,(0,0))
+
+                    calculo = ((medida // 1000) - 3) * -1
+
+                    x = 375
+
+                    if calculo < 0:
+                        contadorEsperaTextoTela = "Já!"
+                        x = 340
+                    else:
+                        contadorEsperaTextoTela = str(calculo)
+
+
+                    escreve_texto(contadorEsperaTextoTela,fonteContadorEspera,(28,130,173),x,250)
+
+                    for i in range(26):         
+                        listaOpcoes[i].desenha_lista_movendo()
+
+                    desenha_retangulo_conteiner_palavra()
+
                     for i in range(len(palavraSorteada)):
-                        letrasPalavra[i].letra = "_"
+                        letrasPalavra[i].desenha_letras()
+                    
+                    janela.blit(naveEspera,(370,400))
+                else:
 
-                    contando = False
+                    if contandoJogo:
+                        obtemTempoComparacaoJogo = pygame.time.get_ticks()
+                        contandoJogo = False
 
-            janela.blit(cenario,(0,0))
+                    obtemTempoComparacaoJogoAtual = pygame.time.get_ticks()
 
-            for i in range(26):         
-                listaOpcoes[i].desenha_lista_movendo()
+                    calculo = 180 - ((obtemTempoComparacaoJogoAtual - obtemTempoComparacaoJogo) // 1000) - acertouErrado - bateu
 
-            desenha_retangulo_conteiner()
+                    if calculo < 1:
+                        perdeu = True
+
+                    contadorJogandoTextoTela = str(calculo)
+
+                    janela.blit(cenario,(0,0))
+
+                    desenha_retangulo_conteiner_contador()
+                    if calculo > 100:                        
+                        x = 328
+                    elif calculo < 10:
+                        x = 370
+                    else:
+                        x = 350
+
+                    escreve_texto(contadorJogandoTextoTela,fonteContadorEspera,(255,255,255),x,15)
+
+                    for i in range(26):         
+                        listaOpcoes[i].desenha_lista_movendo()
+
+                    desenha_retangulo_conteiner_palavra()
+                    
+                    for i in range(len(palavraSorteada)):
+                        letrasPalavra[i].desenha_letras()
+                    
+                    for i in range(4):
+                        listaAsteroides[i].desenha_asteroide()
+                        listaAsteroides[i].atualiza_posicao()
+
+                    jogador.move()
+                    jogador.tiro()
+
+                    grupoTiros.draw(janela)
+
+                    grupoTiros.update()
+
+        elif informacao:
+            titulo = escreve_texto("Informaçoes e comandos",fonte_titulo,(255,255,255),300,25)
             
-            for i in range(len(palavraSorteada)):
-                letrasPalavra[i].desenha_letras()
+            janela.blit(imagemWASD,(50,90))
 
-            jogador.move()
-            jogador.tiro()
+            escreve_texto("Use W A S D para se mover",fonte_texto,(255,255,255),300,175)
 
-            grupoTiros.draw(janela)
+            # pygame.draw.rect(janela,(255,0,0),(50,400,700,150))
 
-            grupoTiros.update()
+            janela.blit(imagemP,(65,225))
+
+            escreve_texto("Presione P para voltar ao menu prinpal",fonte_texto,(255,255,255),300,285)
+
+            escreve_texto_envelopado(janela, textoInfo, fonte_texto, (0,0,0), retanguloConteinerInformacao, 25, (100,100,100), True)
 
         else:
 
