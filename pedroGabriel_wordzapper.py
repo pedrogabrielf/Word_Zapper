@@ -74,7 +74,7 @@ class botao():
 
     def click(self):
 
-        # Obtem a posição do maouse
+        # Obtem a posição do mouse
         mouse = pygame.mouse.get_pos()
 
         # Verifica se o mouse esta dentro do botão
@@ -135,6 +135,7 @@ class disparo(pygame.sprite.Sprite):
         global listaOpcoes
         global palavraSorteada
         global letrasPalavra
+        global venceu
 
         #Vel disparo
         self.rect.y -= 10
@@ -143,7 +144,7 @@ class disparo(pygame.sprite.Sprite):
         for i in range(26):
             
             if self.rect.colliderect(listaOpcoes[i].retangulo) and not listaOpcoes[i].colidiu:
-                self.kill()  
+                self.kill()
                 listaOpcoes[i].cor = (0,0,0)
 
                 listaOpcoes[i].colidiu = True
@@ -153,10 +154,12 @@ class disparo(pygame.sprite.Sprite):
                         if palavraSorteada[letra] == listaOpcoes[i].letra:
                             letrasPalavra[letra].letra = listaOpcoes[i].letra
 
-        
+        # Rever isso !!!!!
         if self.rect.y < 0:  
             self.kill()
 
+
+# Classe para a palavra sorteada
 class letra():
     def __init__(self,letra,fonteUsada,x,y,larguraFonte,alturaFonte):
         self.letra = letra
@@ -194,9 +197,6 @@ def sorteia_palavra():
     return palavraSorteada
 
 
-#pensando se vou deixar ele 
-def desenha_retangulo_conteiner():
-    pygame.draw.rect(window,(21,0,80),(-40,600,5000,100),border_radius=90)
 
 def teste():
     global jogar
@@ -222,6 +222,8 @@ if __name__ == "__main__":
 
     botaojogar = botao("JOGAR", 530, 275, 200, 100, teste)
     botaoQUIT = botao("QUIT", 575,450,100,100,jogarFalse)
+
+    botaojogarDNV = botao("JOGAR NOVAMENTE", 530, 275, 200, 100, teste)
 
     #configs background
     tamanho_bg= (55,55)
@@ -279,21 +281,29 @@ if __name__ == "__main__":
         xRetanguloLetraAtual += (larguraFontePalavraSorteada + 30)
 
 
-
     jogador = principal(370,400,5)
 
     jogar = False
     jogo = True
     contador = True
-
+    venceu = False
+    
     while jogo:
         for evento in pygame.event.get():
             if evento.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
 
+        if venceu:
+            window.blit(bgInicio, (0,0))
+            botaojogarDNV.desenha_botao()
+            botaojogarDNV.click()
+            botaoQUIT.desenha_botao()
+            botaoQUIT.click()
+
         if jogar:
             if contador:
+                # Tempo para ver a palavra
                 tempo = pygame.time.get_ticks()
                 if tempo > 3000:
                     for i in range(len(palavraSorteada)):
@@ -303,10 +313,9 @@ if __name__ == "__main__":
 
             window.blit(bg,(0,0))
 
-            for i in range(26):         
+            for i in range(26):
                 listaOpcoes[i].desenha_lista_movendo()
 
-            desenha_retangulo_conteiner()
             
             for i in range(len(palavraSorteada)):
                 letrasPalavra[i].desenha_letras()
