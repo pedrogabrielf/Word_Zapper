@@ -195,7 +195,7 @@ def escreve_texto(texto,fonte,corTexto,posicaoX,posicaoY):
 
 #Funcao para sortear palavras da lista de palavras
 def sorteia_palavra():
-    with open("Word_Zapper/palavras.txt", encoding="utf-8 ") as arquivo: # Lê o arquivo na forma de "utf-8"
+    with open(caminho_arquivo("palavras.txt"), encoding="utf-8 ") as arquivo: # Lê o arquivo na forma de "utf-8"
         palavras = arquivo.readlines() # Lê cada linha do arquivo e guarda elas em uma lista
         palavras = list(map(str.strip, palavras)) # Remove possiveis espaços em brancono inicio e no final da lista
         palavraSorteada = random.choice(palavras).upper() # padroniza a palavra sorteada para que todas as letras sejam minusculas
@@ -210,11 +210,74 @@ def jogarFalse():
     global jogo
     jogo = False
 
-def caminho_arquivo(nome):
-    caminho = os.getcwd()
-    caminhoAbsoluto = os.path.join(caminho, "Word_Zapper/img", nome)
-    caminhoAbsoluto = Path(caminhoAbsoluto)
+def caminho_arquivo(nome:str):
+    caminho = os.path.dirname(os.path.realpath(__file__))
+    caminhoAbsoluto = os.path.join(caminho, "assets/", nome)
     return caminhoAbsoluto
+
+def retorna_comeco():
+    global listaRetangulos
+    global listaOpcoes
+    global letrasPalavra
+    global listaVerificacao
+    global jogar
+    global jogo
+    global contador
+    global venceu
+    global xRetangulosConteiners
+    global xRetanguloLetraAtual
+    global palavraSorteada
+    global largura
+    global backup
+
+    listaRetangulos = []
+    listaOpcoes = []
+    letrasPalavra = []
+    listaVerificacao = []
+    
+
+    jogar = True
+    jogo = True
+    contador = True
+    venceu = False
+
+
+    xRetangulosConteiners = 50
+    xRetanguloLetraAtual = int(580 - largura / 2)
+    largura = (larguraFontePalavraSorteada + 10) * len(palavraSorteada)
+    palavraSorteada = sorteia_palavra()
+    backup = xRetanguloLetraAtual
+
+        # Seta alfabeto na tela e a respectiva distantia entre as letras e tambem altura
+    for i in range(26):
+        listaRetangulos.append(pygame.Rect(xRetangulosConteiners,75,larguraFonteAlfabeto,alturaFonteAlfabeto))
+        xRetangulosConteiners += 65
+
+    #configs alfabeto
+    for i in range(26):
+        listaOpcoes.append(alfabeto(listaAlfabeto[i],fonteAlfabeto,listaRetangulos[i],5,larguraFonteAlfabeto,alturaFonteAlfabeto))
+
+
+    for i in range(len(palavraSorteada)):
+        letrasPalavra.append(letra(palavraSorteada[i],fonteLetrasPalavraSorteada,xRetanguloLetraAtual,550,larguraFontePalavraSorteada,alturaFontePalavraSorteada))
+
+        xRetanguloLetraAtual += (larguraFontePalavraSorteada + 30)
+
+
+def informacoes():
+    global infos
+    infos = True
+
+def desenha_container_titulo():
+    pygame.draw.rect(window,(21,0,80),(190,30,900,100),border_radius=90)
+
+def desenha_container_titulo2():
+    pygame.draw.rect(window,(21,0,80),(350,30,600,100),border_radius=90)
+
+
+def desenha_container_info():
+    pygame.draw.rect(window,(21,0,80),(39,222,1200,250),border_radius=80)
+
 
 if __name__ == "__main__":
     pygame.init()
@@ -230,21 +293,36 @@ if __name__ == "__main__":
     #fonte texto
     fonte_texto = pygame.font.SysFont("arial", 30)
 
-    botaojogar = botao("JOGAR", 530, 275, 200, 100, paraJogar)
-    botaoQUIT = botao("QUIT", 575,450,100,100,jogarFalse)
+    botaojogar = botao("JOGAR", 535, 200, 200, 100, paraJogar)
 
-    botaojogarDNV = botao("JOGAR NOVAMENTE", 530, 275, 300, 100, paraJogar)
+    botaoQUIT = botao("QUIT", 585,520,100,100,jogarFalse)
+
+    botaoQUIT2 = botao("QUIT", 660,550,200,100,jogarFalse)
+
+    botaojogar2 = botao("JOGAR", 400, 550, 200, 100, paraJogar)
+
+    botaojogarDNV = botao("JOGAR NOVAMENTE", 530, 275, 300, 100, retorna_comeco)
+
+    botaoinfo = botao("Informações", 490, 360, 300, 100, informacoes)
 
     #configs background
     tamanho_bg= (55,55)
-    bg = pygame.image.load(caminho_arquivo('background_space.png'))
+    bg = pygame.image.load(caminho_arquivo('fundoINFO.png'))
     bg = pygame.transform.scale(bg, (largura,altura))
 
     bgInicio = pygame.image.load(caminho_arquivo('fundo2.jpg'))
     bgInicio = pygame.transform.scale(bgInicio, (largura,altura))
 
+    fundoINFOS = pygame.image.load(caminho_arquivo('fundoINFO.png'))
+    fundoINFOS = pygame.transform.scale(bgInicio, (largura,altura))
+
     fonteAlfabeto = pygame.font.Font(caminho_arquivo("fonte.ttf"),50)
     fonteLetrasPalavraSorteada = pygame.font.Font(caminho_arquivo("fonte.ttf"),50)
+
+    fonteGeral = pygame.font.Font(caminho_arquivo("fonte2.ttf"),40)
+    fonteGeral2 = pygame.font.Font(caminho_arquivo("fonte2.ttf"),30)
+    fontePEQUENA = pygame.font.Font(caminho_arquivo("fonte.ttf"),15)
+
     # Tg exemplo de fonte que e utilizado
     larguraFontePalavraSorteada = fonteLetrasPalavraSorteada.size("Ym")[0]
     alturaFontePalavraSorteada = fonteLetrasPalavraSorteada.size("Ym")[1]
@@ -300,7 +378,8 @@ if __name__ == "__main__":
     jogo = True
     contador = True
     venceu = False
-    
+    infos = False
+
     while jogo:
         for evento in pygame.event.get():
             if evento.type == pygame.QUIT:
@@ -309,12 +388,15 @@ if __name__ == "__main__":
 
         if jogar:
             if venceu:
-                window.blit(bgInicio, (0,0))
+                window.fill((0,0,0))
+
+                window.blit(fundoINFOS, (0,0))
+
                 botaojogarDNV.desenha_botao()
                 botaojogarDNV.click()
                 botaoQUIT.desenha_botao()
                 botaoQUIT.click()
-            
+
             else:
                 if contador:
                     # Tempo para ver a palavra
@@ -347,10 +429,39 @@ if __name__ == "__main__":
 
                 grupoTiros.update()
 
+        elif infos:
+
+            window.fill((0,0,0))
+
+            window.blit(fundoINFOS, (0,0))
+
+            desenha_container_titulo()
+            desenha_container_info()
+
+            escreve_texto("INFORMAÇÕES ABAIXO:",fonteGeral,(255,255,255),240,65)
+            escreve_texto("PARA JOGAR UTILIZE AS SETAS DO TECLADO",fonteGeral2,(255,255,255),85,280)
+            escreve_texto("PARA DISPARAR UTILIZE A TECLA ESPAÇO!",fonteGeral2,(255,255,255),85,370)
+
+
+            botaojogar2.desenha_botao()
+            botaojogar2.click()
+
+            botaoQUIT2.desenha_botao()
+            botaoQUIT2.click()
+
         else:
             window.blit(bgInicio, (0,0))
+
+            desenha_container_titulo2()
+            
+            escreve_texto("WORDZAPPER",fonteGeral,(255,255,255),450,60)
+            escreve_texto("VERSÃO: SHOPEE",fontePEQUENA,(255,255,255),580,105)
+
             botaojogar.desenha_botao()
             botaojogar.click()
+
+            botaoinfo.desenha_botao()
+            botaoinfo.click()
 
             botaoQUIT.desenha_botao()
             botaoQUIT.click()
