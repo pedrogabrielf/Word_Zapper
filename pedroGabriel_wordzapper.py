@@ -206,6 +206,11 @@ def paraJogar():
     global jogar, venceu
     jogar = True
     
+def paraJogar2():
+    global jogar, venceu, infos
+    jogar = True
+    infos = False
+
 def jogarFalse():
     global jogo
     jogo = False
@@ -223,6 +228,7 @@ def retorna_comeco():
     global jogar
     global jogo
     global contador
+    global contando
     global venceu
     global xRetangulosConteiners
     global xRetanguloLetraAtual
@@ -239,8 +245,8 @@ def retorna_comeco():
     jogar = True
     jogo = True
     contador = True
+    contando = True
     venceu = False
-
 
     xRetangulosConteiners = 50
     xRetanguloLetraAtual = int(580 - largura / 2)
@@ -274,7 +280,6 @@ def desenha_container_titulo():
 def desenha_container_titulo2():
     pygame.draw.rect(window,(21,0,80),(350,30,600,100),border_radius=90)
 
-
 def desenha_container_info():
     pygame.draw.rect(window,(21,0,80),(39,222,1200,250),border_radius=80)
 
@@ -299,7 +304,7 @@ if __name__ == "__main__":
 
     botaoQUIT2 = botao("QUIT", 660,550,200,100,jogarFalse)
 
-    botaojogar2 = botao("JOGAR", 400, 550, 200, 100, paraJogar)
+    botaojogar2 = botao("JOGAR", 400, 550, 200, 100, paraJogar2)
 
     botaojogarDNV = botao("JOGAR NOVAMENTE", 530, 275, 300, 100, retorna_comeco)
 
@@ -377,8 +382,11 @@ if __name__ == "__main__":
     jogar = False
     jogo = True
     contador = True
+    contando = True
     venceu = False
     infos = False
+
+    contadorzinho = 0 
 
     while jogo:
         for evento in pygame.event.get():
@@ -399,9 +407,15 @@ if __name__ == "__main__":
 
             else:
                 if contador:
+                    if contando:
+                        contadorzinho = pygame.time.get_ticks()
+                        contando = False
                     # Tempo para ver a palavra
                     tempo = pygame.time.get_ticks()
-                    if tempo > 3000:
+
+                    diferenca = tempo - contadorzinho
+
+                    if diferenca > 3000:
                         for i in range(len(palavraSorteada)):
 
                             if palavraSorteada != "-":
