@@ -4,116 +4,114 @@ import string
 import random
 import os
 from pathlib import Path
+
 # Classe principal do jogo 
 class principal:
-    def __init__(self,posicao_inicial_x,posicao_inicial_y,velocidade):
+    def __init__(self,posicao_x,posicao_y,vel):
         espaconave = pygame.image.load(caminho_arquivo('naveEspacial.png'))
         self.nave = pygame.transform.scale(espaconave, (75,75))
-        self.rect = pygame.Rect(posicao_inicial_x, posicao_inicial_y, self.nave.get_width(), self.nave.get_height())
-        self.rect.topleft = posicao_inicial_x,posicao_inicial_y
-        self.velocidade = velocidade
-        self.tiro_disparado = False
+        self.rect = pygame.Rect(posicao_x, posicao_y, self.nave.get_width(), self.nave.get_height())
+        self.rect.topleft = posicao_x,posicao_y
+        self.vel = vel
+        self.disparo_tiro = False
 
     # Funcao para movimentacao da nave
-    def move(self):
+    def movimentacao(self):
         window.blit(self.nave,self.rect)
 
         if pygame.key.get_pressed()[pygame.K_LEFT]:
-            self.rect.x -= self.velocidade
+            self.rect.x -= self.vel
             if self.rect.x < -5:
-                self.rect.x += self.velocidade
+                self.rect.x += self.vel
 
         if pygame.key.get_pressed()[pygame.K_RIGHT]:
-            self.rect.x += self.velocidade
+            self.rect.x += self.vel
             if self.rect.x >= 1210:
-                self.rect.x -= self.velocidade
+                self.rect.x -= self.vel
 
         if pygame.key.get_pressed()[pygame.K_DOWN]:
-            self.rect.y += self.velocidade
+            self.rect.y += self.vel
             if self.rect.y >= 525:
-                self.rect.y -= self.velocidade
+                self.rect.y -= self.vel
 
         if pygame.key.get_pressed()[pygame.K_UP]:
-            self.rect.y -= self.velocidade
+            self.rect.y -= self.vel
             if self.rect.y < 150:
-                self.rect.y += self.velocidade
+                self.rect.y += self.vel
 
 
     # Fucao para o tiro 
-    def tiro(self):
-        if pygame.key.get_pressed()[pygame.K_SPACE] and not self.tiro_disparado:
-            tiro = disparo(self.rect.center[0],self.rect.top)
-            grupoTiros.add(tiro)
+    def deftiro(self):
+        if pygame.key.get_pressed()[pygame.K_SPACE] and not self.disparo_tiro:
+            deftiro = disparo(self.rect.center[0],self.rect.top)
+            grupoTiros.add(deftiro)
 
-            self.tiro_disparado = True
+            self.disparo_tiro = True
         elif not pygame.key.get_pressed()[pygame.K_SPACE]:
-            self.tiro_disparado = False
+            self.disparo_tiro = False
 
  # Funcao coringa para todos os botoes
-class botao():
+class botoes():
     def __init__(self,texto,x,y,largura,altura,funcao):
 
-        self.clicou = False
+        self.click2 = False
 
-        # Especifica o retangulo que sera desenhado
-        self.retanguloConteiner = pygame.Rect(x,y,largura,altura)
-        self.corBotao = (100,100,100)
+        # Retangulo que sera desenhado
+        self.retangulo_Conteiner = pygame.Rect(x,y,largura,altura)
+        self.cor_Botao = (100,100,100)
 
-        # escreve o texto na superficie
+        # Para escrever o texto
         self.texto = fonte_texto.render(texto,True,(255,255,0))
-        # Obtem o tamanho do texto e o guarda dentro do retangulo que ira conter-lo
-        self.retanguloTamnhoTexto = self.texto.get_rect(center=(self.retanguloConteiner.centerx, self.retanguloConteiner.centery))
+        # pega o tamanho do texto e guarda em ret
+        self.retanguloTamanhoTexto = self.texto.get_rect(center=(self.retangulo_Conteiner.centerx, self.retangulo_Conteiner.centery))
 
         self.funcao = funcao
 
-    def desenha_botao(self):
+    def desenha_botoes(self):
         # Desenha o retangulo especificado
-        pygame.draw.rect(window,self.corBotao,self.retanguloConteiner,border_radius=10)
+        pygame.draw.rect(window,self.cor_Botao,self.retangulo_Conteiner,border_radius=10)
         # Coloca o retangulo na tela
-        window.blit(self.texto,self.retanguloTamnhoTexto)
+        window.blit(self.texto,self.retanguloTamanhoTexto)
 
-    def click(self):
+    def clicou(self):
 
-        # Obtem a posição do mouse
+        # Posicao do mouse
         mouse = pygame.mouse.get_pos()
 
-        # Verifica se o mouse esta dentro do botão
-        if self.retanguloConteiner.collidepoint(mouse):
+        # Verifica se o mouse esta no botão
+        if self.retangulo_Conteiner.collidepoint(mouse):
             
-            # Muda a cor do botão quando o mouse esta dentro dele
-            self.corBotao = (55,55,55)
+            # Tipo um Hover no css, quando mouse ta em cima muda de cor
+            self.cor_Botao = (55,55,55)
 
-            # Verifica se foi clicado com o botao direito
+            # Verifica o click
             if pygame.mouse.get_pressed()[0]:
-                # Significa que ele clicou e somente uma booleana ira ser atribuida a essa variavel
-                self.clicou = True
+                #  Clicou
+                self.click2 = True
                 
-            # Quando a condição acima deixar de ser verdadeira ou seja o player deixou de pressionar o botao então a booleana volta a ser falsa por padrao e se executa a ação
             else:
-                # Isso é feito dessa forma por conta de que ao se colocar uma grande quantidade de frames na execução do jogo essa ação seria executada varias vezes o que pode comprometer a performace do jogo em determinados dispositivos
-                if self.clicou == True:
-                    self.clicou = False
+                if self.click2 == True:
+                    self.click2 = False
                     self.funcao()
         else:
-            self.corBotao = (200,100,0)
+            self.cor_Botao = (200,100,0)
 
 class alfabeto():
-    def __init__(self,letra, fonteLetra, Retangulo, velocidade, larguraFonte, alturaFonte):
+    def __init__(self,letra, fonte_Letra, Retangulo, vel, larguraFonte, alturaFonte):
         self.letra = letra
-        self.fonteLetra = fonteLetra
+        self.fonte_Letra = fonte_Letra
+        self.vel = vel
         self.retangulo = Retangulo
-        self.velocidade = velocidade
-        self.larguraFonte = larguraFonte
-        self.alturaFonte = alturaFonte
         self.cor = (255,255,255)
+        self.alturaFonte = alturaFonte
         self.colidiu = False
 
     def desenha_alfabeto_movendo(self):
         
-        letraTela = self.fonteLetra.render(self.letra, True, self.cor)
-        window.blit(letraTela, self.retangulo)
+        letra_Tela = self.fonte_Letra.render(self.letra, True, self.cor)
+        window.blit(letra_Tela, self.retangulo)
 
-        self.retangulo.x -= self.velocidade
+        self.retangulo.x -= self.vel
 
         if self.retangulo.x < 0:
             self.retangulo.x = 1700
@@ -179,17 +177,17 @@ class letra():
     def desenha_letras_alfabeto(self):
         retangulo = pygame.draw.rect(window,(85, 232, 84),(self.x,620,self.larguraFonte,self.alturaFonte), border_radius=10)
 
-        letraTela = self.fonteUsada.render(self.letra, True, self.cor)
+        letra_Tela = self.fonteUsada.render(self.letra, True, self.cor)
 
-        x_letra = retangulo.centerx - letraTela.get_width() // 2
-        y_letra = retangulo.centery - letraTela.get_height() // 2
+        x_letra = retangulo.centerx - letra_Tela.get_width() // 2
+        y_letra = retangulo.centery - letra_Tela.get_height() // 2
 
         # Desenha a letra na posição correta
-        window.blit(letraTela, (x_letra, y_letra))
+        window.blit(letra_Tela, (x_letra, y_letra))
 
 
 #Funcao para escrever textos na tela 
-def escreve_texto(texto,fonte,corTexto,posicaoX,posicaoY):
+def escrever_texto(texto,fonte,corTexto,posicaoX,posicaoY):
     textoEscrito = fonte.render(texto,True,corTexto)
     window.blit(textoEscrito,(posicaoX,posicaoY))
 
@@ -298,17 +296,17 @@ if __name__ == "__main__":
     #fonte texto
     fonte_texto = pygame.font.SysFont("arial", 30)
 
-    botaojogar = botao("JOGAR", 535, 200, 200, 100, paraJogar)
+    botaojogar = botoes("JOGAR", 535, 200, 200, 100, paraJogar)
 
-    botaoQUIT = botao("QUIT", 585,520,100,100,jogarFalse)
+    botaoQUIT = botoes("QUIT", 585,520,100,100,jogarFalse)
 
-    botaoQUIT2 = botao("QUIT", 660,550,200,100,jogarFalse)
+    botaoQUIT2 = botoes("QUIT", 660,550,200,100,jogarFalse)
 
-    botaojogar2 = botao("JOGAR", 400, 550, 200, 100, paraJogar2)
+    botaojogar2 = botoes("JOGAR", 400, 550, 200, 100, paraJogar2)
 
-    botaojogarDNV = botao("JOGAR NOVAMENTE", 530, 275, 300, 100, retorna_comeco)
+    botaojogarDNV = botoes("JOGAR NOVAMENTE", 530, 275, 300, 100, retorna_comeco)
 
-    botaoinfo = botao("Informações", 490, 360, 300, 100, informacoes)
+    botaoinfo = botoes("Informações", 490, 360, 300, 100, informacoes)
 
     #configs background
     tamanho_bg= (55,55)
@@ -400,10 +398,13 @@ if __name__ == "__main__":
 
                 window.blit(fundoINFOS, (0,0))
 
-                botaojogarDNV.desenha_botao()
-                botaojogarDNV.click()
-                botaoQUIT.desenha_botao()
-                botaoQUIT.click()
+                desenha_container_titulo()
+                escrever_texto("VOCÊ VENCEU !!",fonteGeral,(255,255,255),360,65)
+
+                botaojogarDNV.desenha_botoes()
+                botaojogarDNV.clicou()
+                botaoQUIT.desenha_botoes()
+                botaoQUIT.clicou()
 
             else:
                 if contador:
@@ -436,8 +437,8 @@ if __name__ == "__main__":
                 for i in range(len(palavraSorteada)):
                     letrasPalavra[i].desenha_letras_alfabeto()
 
-                player.move()
-                player.tiro()
+                player.movimentacao()
+                player.deftiro()
 
                 grupoTiros.draw(window)
 
@@ -452,33 +453,33 @@ if __name__ == "__main__":
             desenha_container_titulo()
             desenha_container_info()
 
-            escreve_texto("INFORMAÇÕES ABAIXO:",fonteGeral,(255,255,255),240,65)
-            escreve_texto("PARA JOGAR UTILIZE AS SETAS DO TECLADO",fonteGeral2,(255,255,255),85,280)
-            escreve_texto("PARA DISPARAR UTILIZE A TECLA ESPAÇO!",fonteGeral2,(255,255,255),85,370)
+            escrever_texto("INFORMAÇÕES ABAIXO:",fonteGeral,(255,255,255),240,65)
+            escrever_texto("PARA JOGAR UTILIZE AS SETAS DO TECLADO",fonteGeral2,(255,255,255),85,280)
+            escrever_texto("PARA DISPARAR UTILIZE A TECLA ESPAÇO!",fonteGeral2,(255,255,255),85,370)
 
 
-            botaojogar2.desenha_botao()
-            botaojogar2.click()
+            botaojogar2.desenha_botoes()
+            botaojogar2.clicou()
 
-            botaoQUIT2.desenha_botao()
-            botaoQUIT2.click()
+            botaoQUIT2.desenha_botoes()
+            botaoQUIT2.clicou()
 
         else:
             window.blit(bgInicio, (0,0))
 
             desenha_container_titulo2()
             
-            escreve_texto("WORDZAPPER",fonteGeral,(255,255,255),450,60)
-            escreve_texto("VERSÃO: SHOPEE",fontePEQUENA,(255,255,255),580,105)
+            escrever_texto("WORDZAPPER",fonteGeral,(255,255,255),450,60)
+            escrever_texto("VERSÃO: SHOPEE",fontePEQUENA,(255,255,255),580,105)
 
-            botaojogar.desenha_botao()
-            botaojogar.click()
+            botaojogar.desenha_botoes()
+            botaojogar.clicou()
 
-            botaoinfo.desenha_botao()
-            botaoinfo.click()
+            botaoinfo.desenha_botoes()
+            botaoinfo.clicou()
 
-            botaoQUIT.desenha_botao()
-            botaoQUIT.click()
+            botaoQUIT.desenha_botoes()
+            botaoQUIT.clicou()
 
         pygame.display.update()
         relogio.tick(60)
