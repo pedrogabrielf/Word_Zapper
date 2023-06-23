@@ -8,7 +8,7 @@ from pathlib import Path
 # Classe principal do jogo 
 class principal:
     def __init__(self,posicao_x,posicao_y,vel):
-        espaconave = pygame.image.load(caminho_arquivo('naveEspacial.png'))
+        espaconave = pygame.image.load(caminhoRelativo('naveEspacial.png'))
         self.nave = pygame.transform.scale(espaconave, (75,75))
         self.rect = pygame.Rect(posicao_x, posicao_y, self.nave.get_width(), self.nave.get_height())
         self.rect.topleft = posicao_x,posicao_y
@@ -118,45 +118,47 @@ class alfabeto():
             self.cor = (255,255,255)
             self.colidiu = False
 
-
+ # Classe para criar um objeto de disparo que se move para cima na tela e verifica colisões com as opções de letras
 class disparo(pygame.sprite.Sprite):
     def __init__(self,x,y):
         pygame.sprite.Sprite.__init__(self)
         self.x = x
         self.y = y
-        disparo = pygame.image.load(caminho_arquivo('Flame5.png'))
+        # Carrega a imagem do disparo e redimensiona
+        disparo = pygame.image.load(caminhoRelativo('Flame5.png'))
         self.image = pygame.transform.scale(disparo,(20,15))
         self.rect = self.image.get_rect()
         self.rect.center = [x,y]
 
     def update(self):
-        global listaOpcoes
-        global palavraSorteada
-        global letrasPalavra
+        global lista_opc
+        global palavra_sorteada
+        global letras_palavra
         global venceu
-        global listaVerificacao
+        global lista_verifica
 
-        #Vel disparo
+         # Velocidade do disparo 
         self.rect.y -= 10
 
-        # Configs colisao
+        # Verifica colisão com as opções de letras 
         for i in range(26):
             
-            if self.rect.colliderect(listaOpcoes[i].retangulo) and not listaOpcoes[i].colidiu:
+            if self.rect.colliderect(lista_opc[i].retangulo) and not lista_opc[i].colidiu:
                 self.kill()
-                listaOpcoes[i].cor = (0,0,0)
+                lista_opc[i].cor = (0,0,0)
 
-                listaOpcoes[i].colidiu = True
-
-                if listaOpcoes[i].letra in palavraSorteada:
-                    for letra in range (len(palavraSorteada)):
-                        if palavraSorteada[letra] == listaOpcoes[i].letra:
-                            letrasPalavra[letra].letra = palavraSorteada[letra]
-                            listaVerificacao[letra] = palavraSorteada[letra]
-                            print(listaVerificacao)
-                            if "_" not in listaVerificacao:
+                lista_opc[i].colidiu = True
+                # Verifica se a letra do disparo está na palavra sorteada 
+                if lista_opc[i].letra in palavra_sorteada:
+                    for letra in range (len(palavra_sorteada)):
+                        if palavra_sorteada[letra] == lista_opc[i].letra:
+                            letras_palavra[letra].letra = palavra_sorteada[letra]
+                            lista_verifica[letra] = palavra_sorteada[letra]
+                            print(lista_verifica)
+                            # Verifica se o jogador venceu 
+                            if "_" not in lista_verifica:
                                 venceu = True
-
+        # Remove o disparo quando sai da tela 
         if self.rect.y < 0:  
             self.kill()
 
@@ -179,26 +181,26 @@ class letra():
 
         letra_Tela = self.fonteUsada.render(self.letra, True, self.cor)
 
-        x_letra = retangulo.centerx - letra_Tela.get_width() // 2
-        y_letra = retangulo.centery - letra_Tela.get_height() // 2
+        xletra = retangulo.centerx - letra_Tela.get_width() // 2
+        yletra = retangulo.centery - letra_Tela.get_height() // 2
 
         # Desenha a letra na posição correta
-        window.blit(letra_Tela, (x_letra, y_letra))
+        window.blit(letra_Tela, (xletra, yletra))
 
 
 #Funcao para escrever textos na tela 
-def escrever_texto(texto,fonte,corTexto,posicaoX,posicaoY):
+def escrevertexto(texto,fonte,corTexto,posicaoX,posicaoY):
     textoEscrito = fonte.render(texto,True,corTexto)
     window.blit(textoEscrito,(posicaoX,posicaoY))
 
 #Funcao para sortear palavras da lista de palavras
-def sorteia_palavra():
-    with open(caminho_arquivo("palavras.txt"), encoding="utf-8 ") as arquivo: # Lê o arquivo na forma de "utf-8"
-        palavras = arquivo.readlines() # Lê cada linha do arquivo e guarda elas em uma lista
-        palavras = list(map(str.strip, palavras)) # Remove possiveis espaços em brancono inicio e no final da lista
-        palavraSorteada = random.choice(palavras).upper() # padroniza a palavra sorteada para que todas as letras sejam minusculas
-    return palavraSorteada
-
+def sorteador():
+    with open(caminhoRelativo("palavras.txt"), encoding="utf-8 ") as arquivo: # Lê o arquivo na forma de "utf-8"
+        palavrasMisteriosa = arquivo.readlines() # Lê cada linha do arquivo e guarda elas em uma lista
+        palavrasMisteriosa = list(map(str.strip, palavrasMisteriosa)) # Remove possiveis espaços em brancono inicio e no final da lista
+        palavra_sorteada = random.choice(palavrasMisteriosa).upper() # padroniza a palavra sorteada para que todas as letras sejam minusculas
+    return palavra_sorteada
+  
 
 def paraJogar():
     global jogar, venceu
@@ -213,31 +215,34 @@ def jogarFalse():
     global jogo
     jogo = False
 
-def caminho_arquivo(nome:str):
-    caminho = os.path.dirname(os.path.realpath(__file__))
-    caminhoAbsoluto = os.path.join(caminho, "assets/", nome)
-    return caminhoAbsoluto
+#Caminho relativo para os arquivos.
+def caminhoRelativo(nome:str):
+    caminho_arq = os.path.dirname(os.path.realpath(__file__))
+    caminho2 = os.path.join(caminho_arq, "assets/", nome)
+    return caminho2
 
+#Função para reiniciar o jogo caso o jogador escolha!
 def retorna_comeco():
-    global listaRetangulos
-    global listaOpcoes
-    global letrasPalavra
-    global listaVerificacao
+    global lista_ret
+    global backup
+    global lista_opc
+    global palavra_sorteada
+    global letras_palavra
+    global lista_verifica
     global jogar
     global jogo
+    global largura
     global contador
     global contando
     global venceu
-    global xRetangulosConteiners
-    global xRetanguloLetraAtual
-    global palavraSorteada
-    global largura
-    global backup
+    global x_conteiners
+    global x_letra_atual
 
-    listaRetangulos = []
-    listaOpcoes = []
-    letrasPalavra = []
-    listaVerificacao = []
+
+    lista_ret = []
+    lista_opc = []
+    letras_palavra = []
+    lista_verifica = []
     
 
     jogar = True
@@ -246,26 +251,27 @@ def retorna_comeco():
     contando = True
     venceu = False
 
-    xRetangulosConteiners = 50
-    xRetanguloLetraAtual = int(580 - largura / 2)
-    largura = (larguraFontePalavraSorteada + 10) * len(palavraSorteada)
-    palavraSorteada = sorteia_palavra()
-    backup = xRetanguloLetraAtual
+
+    x_conteiners = 50
+    x_letra_atual = int(580 - largura / 2)
+    largura = (largura_fonte_palavrasorteada + 10) * len(palavra_sorteada)
+    palavra_sorteada = sorteador()
+    backup = x_letra_atual
 
         # Seta alfabeto na tela e a respectiva distantia entre as letras e tambem altura
     for i in range(26):
-        listaRetangulos.append(pygame.Rect(xRetangulosConteiners,75,larguraFonteAlfabeto,alturaFonteAlfabeto))
-        xRetangulosConteiners += 65
+        lista_ret.append(pygame.Rect(x_conteiners,75,largura_fonte_alfabeto,alturaFonteAlfabeto))
+        x_conteiners += 65
 
     #configs alfabeto
     for i in range(26):
-        listaOpcoes.append(alfabeto(listaAlfabeto[i],fonteAlfabeto,listaRetangulos[i],5,larguraFonteAlfabeto,alturaFonteAlfabeto))
+        lista_opc.append(alfabeto(listaAlfabeto[i],fonte_alfabeto,lista_ret[i],5,largura_fonte_alfabeto,alturaFonteAlfabeto))
 
 
-    for i in range(len(palavraSorteada)):
-        letrasPalavra.append(letra(palavraSorteada[i],fonteLetrasPalavraSorteada,xRetanguloLetraAtual,550,larguraFontePalavraSorteada,alturaFontePalavraSorteada))
+    for i in range(len(palavra_sorteada)):
+        letras_palavra.append(letra(palavra_sorteada[i],fonte_palavrasorteada,x_letra_atual,550,largura_fonte_palavrasorteada,altura_fonte_palavraSorteada))
 
-        xRetanguloLetraAtual += (larguraFontePalavraSorteada + 30)
+        x_letra_atual += (largura_fonte_palavrasorteada + 30)
 
 
 def informacoes():
@@ -310,69 +316,69 @@ if __name__ == "__main__":
 
     #configs background
     tamanho_bg= (55,55)
-    bg = pygame.image.load(caminho_arquivo('fundoINFO.png'))
+    bg = pygame.image.load(caminhoRelativo('fundoINFO.png'))
     bg = pygame.transform.scale(bg, (largura,altura))
 
-    bgInicio = pygame.image.load(caminho_arquivo('fundo2.jpg'))
+    bgInicio = pygame.image.load(caminhoRelativo('fundo2.jpg'))
     bgInicio = pygame.transform.scale(bgInicio, (largura,altura))
 
-    fundoINFOS = pygame.image.load(caminho_arquivo('fundoINFO.png'))
+    fundoINFOS = pygame.image.load(caminhoRelativo('fundoINFO.png'))
     fundoINFOS = pygame.transform.scale(bgInicio, (largura,altura))
 
-    fonteAlfabeto = pygame.font.Font(caminho_arquivo("fonte.ttf"),50)
-    fonteLetrasPalavraSorteada = pygame.font.Font(caminho_arquivo("fonte.ttf"),50)
+    fonte_alfabeto = pygame.font.Font(caminhoRelativo("fonte.ttf"),50)
+    fonte_palavrasorteada = pygame.font.Font(caminhoRelativo("fonte.ttf"),50)
 
-    fonteGeral = pygame.font.Font(caminho_arquivo("fonte2.ttf"),40)
-    fonteGeral2 = pygame.font.Font(caminho_arquivo("fonte2.ttf"),30)
-    fontePEQUENA = pygame.font.Font(caminho_arquivo("fonte.ttf"),15)
+    fonteGeral = pygame.font.Font(caminhoRelativo("fonte2.ttf"),40)
+    fonteGeral2 = pygame.font.Font(caminhoRelativo("fonte2.ttf"),30)
+    fontePEQUENA = pygame.font.Font(caminhoRelativo("fonte.ttf"),15)
 
     # Tg exemplo de fonte que e utilizado
-    larguraFontePalavraSorteada = fonteLetrasPalavraSorteada.size("Ym")[0]
-    alturaFontePalavraSorteada = fonteLetrasPalavraSorteada.size("Ym")[1]
+    largura_fonte_palavrasorteada = fonte_palavrasorteada.size("Ym")[0]
+    altura_fonte_palavraSorteada = fonte_palavrasorteada.size("Ym")[1]
 
-    larguraFonteAlfabeto = fonteAlfabeto.size("Ym")[0]
-    alturaFonteAlfabeto = fonteAlfabeto.size("Ym")[1]
+    largura_fonte_alfabeto = fonte_alfabeto.size("Ym")[0]
+    alturaFonteAlfabeto = fonte_alfabeto.size("Ym")[1]
 
     listaAlfabeto = list(string.ascii_uppercase)
 
-    listaRetangulos = []
+    lista_ret = []
 
-    xRetangulosConteiners = 50
+    x_conteiners = 50
 
-    letrasPalavra = []
+    letras_palavra = []
 
     grupoTiros = pygame.sprite.Group()
 
-    palavraSorteada = sorteia_palavra()
+    palavra_sorteada = sorteador()
 
     caminho = os.getcwd()
 
     # Seta alfabeto na tela e a respectiva distantia entre as letras e tambem altura
     for i in range(26):
-        listaRetangulos.append(pygame.Rect(xRetangulosConteiners,75,larguraFonteAlfabeto,alturaFonteAlfabeto))
-        xRetangulosConteiners += 65
+        lista_ret.append(pygame.Rect(x_conteiners,75,largura_fonte_alfabeto,alturaFonteAlfabeto))
+        x_conteiners += 65
 
-    listaOpcoes = []
+    lista_opc = []
     
     #configs alfabeto
     for i in range(26):
-        listaOpcoes.append(alfabeto(listaAlfabeto[i],fonteAlfabeto,listaRetangulos[i],5,larguraFonteAlfabeto,alturaFonteAlfabeto))
+        lista_opc.append(alfabeto(listaAlfabeto[i],fonte_alfabeto,lista_ret[i],5,largura_fonte_alfabeto,alturaFonteAlfabeto))
 
-    largura = (larguraFontePalavraSorteada + 10) * len(palavraSorteada)
+    largura = (largura_fonte_palavrasorteada + 10) * len(palavra_sorteada)
 
     # Retangulo da palavra sorteada 
-    xRetanguloLetraAtual = int(580 - largura / 2)
+    x_letra_atual = int(580 - largura / 2)
     
-    backup = xRetanguloLetraAtual
+    backup = x_letra_atual
 
-    letrasPalavra = []
+    letras_palavra = []
   
-    listaVerificacao = []
+    lista_verifica = []
 
-    for i in range(len(palavraSorteada)):
-        letrasPalavra.append(letra(palavraSorteada[i],fonteLetrasPalavraSorteada,xRetanguloLetraAtual,550,larguraFontePalavraSorteada,alturaFontePalavraSorteada))
+    for i in range(len(palavra_sorteada)):
+        letras_palavra.append(letra(palavra_sorteada[i],fonte_palavrasorteada,x_letra_atual,550,largura_fonte_palavrasorteada,altura_fonte_palavraSorteada))
 
-        xRetanguloLetraAtual += (larguraFontePalavraSorteada + 30)
+        x_letra_atual += (largura_fonte_palavrasorteada + 30)
 
 
     player = principal(370,400,5)
@@ -399,7 +405,7 @@ if __name__ == "__main__":
                 window.blit(fundoINFOS, (0,0))
 
                 desenha_container_titulo()
-                escrever_texto("VOCÊ VENCEU !!",fonteGeral,(255,255,255),360,65)
+                escrevertexto("VOCÊ VENCEU !!",fonteGeral,(255,255,255),360,65)
 
                 botaojogarDNV.desenha_botoes()
                 botaojogarDNV.clicou()
@@ -417,25 +423,25 @@ if __name__ == "__main__":
                     diferenca = tempo - contadorzinho
 
                     if diferenca > 3000:
-                        for i in range(len(palavraSorteada)):
+                        for i in range(len(palavra_sorteada)):
 
-                            if palavraSorteada != "-":
-                                letrasPalavra[i].letra = "_"
-                                listaVerificacao.append("_")
+                            if palavra_sorteada != "-":
+                                letras_palavra[i].letra = "_"
+                                lista_verifica.append("_")
                             else:
-                                letrasPalavra[i].letra = "-"
-                                listaVerificacao.append("-")
+                                letras_palavra[i].letra = "-"
+                                lista_verifica.append("-")
 
                         contador = False
 
                 window.blit(bg,(0,0))
 
                 for i in range(26):
-                    listaOpcoes[i].desenha_alfabeto_movendo()
+                    lista_opc[i].desenha_alfabeto_movendo()
 
                 
-                for i in range(len(palavraSorteada)):
-                    letrasPalavra[i].desenha_letras_alfabeto()
+                for i in range(len(palavra_sorteada)):
+                    letras_palavra[i].desenha_letras_alfabeto()
 
                 player.movimentacao()
                 player.deftiro()
@@ -453,9 +459,9 @@ if __name__ == "__main__":
             desenha_container_titulo()
             desenha_container_info()
 
-            escrever_texto("INFORMAÇÕES ABAIXO:",fonteGeral,(255,255,255),240,65)
-            escrever_texto("PARA JOGAR UTILIZE AS SETAS DO TECLADO",fonteGeral2,(255,255,255),85,280)
-            escrever_texto("PARA DISPARAR UTILIZE A TECLA ESPAÇO!",fonteGeral2,(255,255,255),85,370)
+            escrevertexto("INFORMAÇÕES ABAIXO:",fonteGeral,(255,255,255),240,65)
+            escrevertexto("PARA JOGAR UTILIZE AS SETAS DO TECLADO",fonteGeral2,(255,255,255),85,280)
+            escrevertexto("PARA DISPARAR UTILIZE A TECLA ESPAÇO!",fonteGeral2,(255,255,255),85,370)
 
 
             botaojogar2.desenha_botoes()
@@ -469,8 +475,8 @@ if __name__ == "__main__":
 
             desenha_container_titulo2()
             
-            escrever_texto("WORDZAPPER",fonteGeral,(255,255,255),450,60)
-            escrever_texto("VERSÃO: SHOPEE",fontePEQUENA,(255,255,255),580,105)
+            escrevertexto("WORDZAPPER",fonteGeral,(255,255,255),450,60)
+            escrevertexto("VERSÃO: SHOPEE",fontePEQUENA,(255,255,255),580,105)
 
             botaojogar.desenha_botoes()
             botaojogar.clicou()
